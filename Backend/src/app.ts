@@ -5,11 +5,11 @@ import helmet from "helmet";
 
 import mongoSanitize from "express-mongo-sanitize";
 import userRouter from "./routes/userRoutes";
-import AppError from "./AppError";
+import AppError from "./utils/AppError";
 
 import globalErrorHanlder from "./controllers/errorController";
-
-const xss = require("xss-clean") as () => express.RequestHandler;
+// @ts-ignore: No types available for xss-clean
+import xss from "xss-clean";
 
 const app = express();
 
