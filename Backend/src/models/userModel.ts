@@ -2,6 +2,21 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 
+interface IUser extends Document {
+  _id: string;
+  email: string;
+  password: string;
+  firstName: string;
+  secondName: string;
+  sketches: any[];
+  profile?: string | null;
+  passwordChangedAt?: Date | null;
+  correctPassword(
+    candidatePassword: string,
+    userPassword: string
+  ): Promise<boolean>;
+}
+
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -23,7 +38,7 @@ const userSchema = new mongoose.Schema({
     validate: [validator.isEmail, "Email should be a valid email format"],
   },
 
-  photo: {
+  profile: {
     type: String,
   },
   password: {
@@ -32,11 +47,19 @@ const userSchema = new mongoose.Schema({
     minLength: [8, "Password should be at least 8 characters"],
     select: false,
   },
+  sketches: {
+    type: [mongoose.Schema.Types.Mixed], // or a specific type or sub-schema
+    validate: {
+      validator: function (val: [mongoose.Schema.Types.Mixed]) {
+        return val.length <= 6; // max 5 elements
+      },
+      message: "You can only store up to 6 sketches",
+    },
+  },
+
   passwordChangedAt: {
     type: Date,
   },
-  passwordResetToken: String,
-  passwordResetExpires: Date,
 });
 
 userSchema.pre("save", async function (next) {
@@ -62,4 +85,5 @@ userSchema.methods.changedPasswordAfter = function (JWTTimeStamp: number) {
   return false;
 };
 const User = mongoose.model("User", userSchema);
-module.exports = User;
+export default User;
+export type { IUser };
