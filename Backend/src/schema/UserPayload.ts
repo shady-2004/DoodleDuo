@@ -1,8 +1,15 @@
 type UserPayload = {
   id: string;
   email: string;
-  profile?: string | undefined;
+  firstName: string;
+  lastName: string;
   password?: string;
 };
 
-export { UserPayload };
+type userIn = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+export { UserPayload, userIn };
