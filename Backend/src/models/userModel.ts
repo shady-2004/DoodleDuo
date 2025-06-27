@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 
+import sketchSchema from "./sketchModel";
+
 interface IUser extends Document {
   _id: string;
   email: string;
@@ -40,6 +42,12 @@ const userSchema = new mongoose.Schema({
 
   profile: {
     type: String,
+    validate: {
+      validator: function (val: string) {
+        return validator.isURL(val);
+      },
+      message: "Please provide a valid URL for the profile image",
+    },
   },
   password: {
     type: String,
@@ -48,10 +56,10 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
   sketches: {
-    type: [mongoose.Schema.Types.Mixed], // or a specific type or sub-schema
+    type: [sketchSchema], // use the imported sketchSchema for subdocuments
     validate: {
       validator: function (val: [mongoose.Schema.Types.Mixed]) {
-        return val.length <= 6; // max 5 elements
+        return val.length <= 6; // max 6 elements
       },
       message: "You can only store up to 6 sketches",
     },
