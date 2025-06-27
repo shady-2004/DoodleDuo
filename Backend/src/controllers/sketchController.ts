@@ -16,7 +16,7 @@ const addSketchToUser = catchAsync(
       return next(new AppError("No sketch data provided", 403));
     }
 
-    user.sketches.push({ data: req.body.sketchData });
+    user.sketches.push({ data: req.body.sketchData, name: req.body.name });
     await user.save();
     res.status(201).json({
       status: "success",
@@ -33,10 +33,11 @@ const getAllUserSketches = catchAsync(
     if (!user) {
       return next(new AppError("User not found", 404));
     }
-    const sketches = user.sketches.map(({ _id, createdAt, picture }) => ({
+    const sketches = user.sketches.map(({ _id, createdAt, picture, name }) => ({
       id: _id,
       createdAt,
       picture,
+      name,
     }));
     res.status(200).json({
       status: "success",
@@ -70,6 +71,7 @@ const getUserSketch = catchAsync(
         sketch: {
           id: sketch._id,
           data: sketch.data,
+          name: sketch.name,
         },
       },
     });

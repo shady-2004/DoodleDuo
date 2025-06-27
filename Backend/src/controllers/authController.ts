@@ -47,15 +47,26 @@ const login = catchAsync(
       return next(new AppError("Please provide email and password!", 400));
     }
     //Chech if user exists && password is correct
-    const user = (await User.findOne({ email }).select(
+    const docUser = (await User.findOne({ email }).select(
       "+password"
     )) as IUser | null;
 
-    if (!user || !(await user.correctPassword(password, user.password))) {
+    if (
+      !docUser ||
+      !(await docUser.correctPassword(password, docUser.password))
+    ) {
       return next(
         new AppError("False login credintials (User not found)", 401)
       );
     }
+
+    const user: UserPayload = {
+      id: docUser._id.toString(),
+      email: docUser.email,
+      firstName: docUser.firstName,
+      lastName: docUser.lastName,
+    };
+    createSendToken(user, 201, res);
   }
 );
 

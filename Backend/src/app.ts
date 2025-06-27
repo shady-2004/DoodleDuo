@@ -2,18 +2,25 @@ import express from "express";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import sanitizeMiddleware from "./middlewares/sanitize";
+import cors from "cors";
 
-import mongoSanitize from "express-mongo-sanitize";
 import userRouter from "./routes/userRoutes";
-import AppError from "./utils/AppError";
 
 import globalErrorHanlder from "./controllers/errorController";
-// @ts-ignore: No types available for xss-clean
-import xss from "xss-clean";
+import AppError from "./utils/AppError";
 
 const app = express();
 
 app.use(helmet());
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "*",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
 
 const limiter = rateLimit({
   max: 100,
@@ -24,14 +31,15 @@ app.use("/DoodleDuo", limiter);
 
 app.use(express.json({ limit: "10kb" }));
 
-app.use(mongoSanitize());
-app.use(xss());
+app.use(sanitizeMiddleware);
 
-app.use(morgan("dev"));
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("combined"));
+}
 
 app.use("/DoodleDuo/users", userRouter);
 
-// app.all("*", (req, res) => {
+// app.all("*", (req, res, next) => {
 //   next(new AppError(`Can't find ${req.originalUrl} on this server! `, 404));
 // });
 app.use(globalErrorHanlder);

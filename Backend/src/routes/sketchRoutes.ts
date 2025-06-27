@@ -3,11 +3,13 @@ import sketchController from "../controllers/sketchController";
 
 const router = express.Router();
 
-router.route("/").get(sketchController.getAllUserSketches);
+router
+  .route("/")
+  .get(sketchController.getAllUserSketches)
+  .post(sketchController.addSketchToUser);
 
 router
   .route("/:id")
-  .post(sketchController.addSketchToUser)
   .get(sketchController.getUserSketch)
   .delete(sketchController.deleteUserSketch)
   .patch(sketchController.deleteUserSketch);

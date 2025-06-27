@@ -12,6 +12,13 @@ const sketchSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     required: true,
   },
+  name: {
+    type: String,
+    required: [true, "Please provide a name for the sketch."],
+    trim: true,
+    maxLength: [20, "A sketch name must have less or equal than 50 characters"],
+    unique: [true, "There is already a sketch with that name"],
+  },
   picture: {
     type: String,
     default:
