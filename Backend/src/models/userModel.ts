@@ -9,7 +9,7 @@ interface IUser extends Document {
   email: string;
   password: string;
   firstName: string;
-  secondName: string;
+  lastName: string;
   sketches: any[];
   profile?: string | null;
   passwordChangedAt?: Date | null;
