@@ -42,6 +42,12 @@ const userSchema = new mongoose.Schema({
 
   profile: {
     type: String,
+    validate: {
+      validator: function (val: string) {
+        return validator.isURL(val);
+      },
+      message: "Please provide a valid URL for the profile image",
+    },
   },
   password: {
     type: String,

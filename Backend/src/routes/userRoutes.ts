@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.route("/login").post(authController.login);
 
-router.use("/sketch", sketchRouter);
+router.use("/sketch", authController.protect, sketchRouter);
 
 export default router;

@@ -75,3 +75,62 @@ const getUserSketch = catchAsync(
     });
   }
 );
+
+const deleteUserSketch = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = await User.findById(req.user?.id);
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+    if (!req.params.id) {
+      return next(new AppError("No sketch id provided", 403));
+    }
+    const sketchIndex = user.sketches.findIndex(
+      ({ _id }) => _id.toString() == req.params.id
+    );
+    if (sketchIndex === -1) {
+      return next(new AppError("User does not own sketch with that id", 404));
+    }
+    user.sketches.splice(sketchIndex, 1);
+    await user.save();
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  }
+);
+const updateUserSketch = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = await User.findById(req.user?.id);
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+    if (!req.params.id) {
+      return next(new AppError("No sketch id provided", 403));
+    }
+    const sketchIndex = user.sketches.findIndex(
+      ({ _id }) => _id.toString() == req.params.id
+    );
+    if (sketchIndex === -1) {
+      return next(new AppError("User does not own sketch with that id", 404));
+    }
+    if (!req.body.sketchData || !req.body.sketchPicture) {
+      return next(new AppError("Missing sketch data sketch data ", 403));
+    }
+    user.sketches[sketchIndex].data = req.body.sketchData;
+    user.sketches[sketchIndex].picture = req.body.sketchPicture;
+    await user.save();
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  }
+);
+
+export default {
+  addSketchToUser,
+  getAllUserSketches,
+  getUserSketch,
+  deleteUserSketch,
+  updateUserSketch,
+};
