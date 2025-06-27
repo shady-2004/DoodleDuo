@@ -2,7 +2,7 @@ import User, { IUser } from "./../models/userModel";
 import catchAsync from "../utils/catchAsync";
 import jwt from "jsonwebtoken";
 import AppError from "../utils/AppError";
-import { UserPayload } from "../schema/UserPayload";
+import { userIn, UserPayload } from "../schema/UserPayload";
 import { Response, Request, NextFunction } from "express";
 import util from "util";
 import { AuthenticatedUser } from "../schema/user";
@@ -56,15 +56,30 @@ const login = catchAsync(
         new AppError("False login credintials (User not found)", 401)
       );
     }
+  }
+);
 
-    // Map IUser to UserPayload
-    const userPayload: UserPayload = {
-      id: user._id,
-      email: user.email,
-      profile: user.profile || undefined,
-      password: user.password,
+const signUp = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const UserPayload = req.body as userIn;
+    const check = await User.findOne({ email: UserPayload.email });
+    if (check) {
+      return next(new AppError("User already exists", 400));
+    }
+
+    const docUser = await User.create({
+      email: UserPayload.email,
+      password: UserPayload.password,
+      firstName: UserPayload.firstName,
+      lastName: UserPayload.lastName,
+    });
+    const user: UserPayload = {
+      id: docUser._id.toString(),
+      email: docUser.email,
+      firstName: docUser.firstName,
+      lastName: docUser.lastName,
     };
-    createSendToken(userPayload, 200, res);
+    createSendToken(user, 201, res);
   }
 );
 
@@ -119,4 +134,4 @@ const protect = catchAsync(
   }
 );
 
-export default { login, protect };
+export default { login, protect, signUp };
