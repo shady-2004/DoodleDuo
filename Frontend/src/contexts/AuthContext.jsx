@@ -1,22 +1,42 @@
-import { createContext, useState } from "react";
-const AuthContext = createContext();
+import { useEffect, useState } from "react";
+import AuthContext from "./AuthContextCreate";
 import axios from "axios";
+import { toast } from "react-toastify";
 function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
+  const [user, setUser] = useState({});
+
+  const [token, setToken] = useState("");
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token-DoodleDuo");
     const savedUser = localStorage.getItem("user-DoodleDuo");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
 
-  const [token, setToken] = useState(
-    () => localStorage.getItem("token-DoodleDuo") || null
-  );
+    if (savedToken && savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setToken(savedToken);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Failed to parse user from localStorage:", error);
+        localStorage.removeItem("user-DoodleDuo");
+        localStorage.removeItem("token-DoodleDuo");
+      }
+    }
 
-  const [isAuthenticated, setIsAuthenticated] = useState(!!user);
+    setIsLoading(false);
+  }, []);
 
   async function login(email, password) {
+    setIsLoading(true);
+
     try {
       const res = await axios.post(
-        "http://127.0.0.1:3000/DoodleDuo/api/user/login",
+        "http://127.0.0.1:3000/DoodleDuo/api/users/login",
         {
           email,
           password,
@@ -32,11 +52,16 @@ function AuthProvider({ children }) {
       setIsAuthenticated(true);
     } catch (error) {
       if (error.response?.status === 401) {
-        console.log("Invalid credentials");
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 3000,
+          toastId: "missing info",
+        });
       } else {
         console.error("Login error:", error);
       }
     }
+    setIsLoading(false);
   }
   function logout() {
     localStorage.removeItem("token-DoodleDuo");
@@ -46,14 +71,17 @@ function AuthProvider({ children }) {
     setIsAuthenticated(false);
   }
 
-  async function signup(name, email, password) {
+  async function signup(firstName, lastName, email, password) {
+    console.log(email);
+    setIsLoading(true);
     try {
       const res = await axios.post(
-        "http://127.0.0.1:3000/DoodleDuo/api/user/signup",
-        { name, email, password }
+        "http://127.0.0.1:3000/DoodleDuo/api/users/signup",
+        { firstName, lastName, email, password }
       );
 
-      const { token, user } = res.data;
+      const { token } = res.data;
+      const { user } = res.data.data;
 
       // Save to localStorage
       localStorage.setItem("token-DoodleDuo", token);
@@ -65,16 +93,21 @@ function AuthProvider({ children }) {
       setIsAuthenticated(true);
     } catch (error) {
       if (error.response?.status === 400) {
-        console.log("Signup failed: Bad data");
+        toast.error(error.response.data.message, {
+          position: "top-center",
+          autoClose: 3000,
+          toastId: "missing info",
+        });
       } else {
-        console.error("Signup error:", error);
+        console.error("Sign up error:", error);
       }
     }
+    setIsLoading(false);
   }
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isAuthenticated, login, logout, signup }}
+      value={{ user, token, isAuthenticated, login, logout, signup, isLoading }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,20 +1,23 @@
-import BrowserRouter from "react-router-dom/BrowserRouter";
-import Routes from "react-router-dom/Routes";
-import Route from "react-router-dom/Route";
-import Sketch from "./components/Sketch";
-import Sketches from "./components/Sketches";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Session from "./pages/Session";
+import Sketches from "./pages/Sketches";
 import AuthProvider from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Nav from "./components/Nav";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
     <>
       <AuthProvider>
         <BrowserRouter>
+          <Nav />
+          <ToastContainer />
           <Routes>
-            <Route path="/" element={<Home _="login" />} />
-            <Route path="/login" element={<Home _="login" />} />
-            <Route path="/signup" element={<Home _="signup" />} />
+            <Route path="/" element={<Home mode="login" />} />
+            <Route path="/login" element={<Home mode="login" />} />
+            <Route path="/signup" element={<Home mode="signup" />} />
             <Route
               path="/sketches"
               element={
@@ -27,7 +30,7 @@ function App() {
               path="/sketches/:id"
               element={
                 <ProtectedRoute>
-                  <Sketch />
+                  <Session />
                 </ProtectedRoute>
               }
             />

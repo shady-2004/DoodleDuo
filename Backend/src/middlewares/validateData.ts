@@ -5,6 +5,7 @@ import { userIn } from "../schema/UserPayload";
 const validateSignUpData = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, firstName, lastName } = req.body as userIn;
+    console.log(req.body);
     if (!email || !password || !firstName || !lastName) {
       return next(new AppError("Please provide all required fields", 400));
     }

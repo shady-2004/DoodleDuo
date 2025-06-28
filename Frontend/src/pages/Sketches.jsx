@@ -1,5 +1,5 @@
 function Sketches() {
-  return <div></div>;
+  return <div>Sketches</div>;
 }
 
 export default Sketches;

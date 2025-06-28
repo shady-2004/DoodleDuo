@@ -27,7 +27,7 @@ const limiter = rateLimit({
   windowMs: 60 * 60 * 100,
 });
 
-app.use("/DoodleDuo", limiter);
+app.use("/DoodleDuo/api", limiter);
 
 app.use(express.json({ limit: "10kb" }));
 
@@ -37,7 +37,7 @@ if (process.env.NODE_ENV !== "production") {
   app.use(morgan("combined"));
 }
 
-app.use("/DoodleDuo/users", userRouter);
+app.use("/DoodleDuo/api/users", userRouter);
 
 // app.all("*", (req, res, next) => {
 //   next(new AppError(`Can't find ${req.originalUrl} on this server! `, 404));

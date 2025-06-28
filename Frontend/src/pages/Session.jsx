@@ -1,5 +1,5 @@
 function Session() {
-  return <div></div>;
+  return <div>Session</div>;
 }
 
 export default Session;
