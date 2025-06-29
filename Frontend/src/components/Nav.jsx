@@ -32,9 +32,9 @@ function Nav() {
           </Link>
         )}
 
-        <Link to="/sketches">
+        {/* <Link to="/sketches">
           <div className={navItemClasses}>Sketches</div>
-        </Link>
+        </Link> */}
       </div>
     </div>
   );

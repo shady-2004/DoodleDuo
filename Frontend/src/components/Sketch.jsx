@@ -1,23 +1,24 @@
-import React, { useRef } from "react";
-import CanvasDraw from "react-canvas-draw";
-function Sketch() {
-  const canvas = useRef(null);
-  canvas;
+import React from "react";
+import { Link } from "react-router-dom";
+
+function Sketch({ picture, date, name, id }) {
+  console.log(picture, date, name, id);
   return (
-    <div>
-      <CanvasDraw
-        ref={canvas}
-        brushColor="#000"
-        brushRadius={4}
-        lazyRadius={0}
-        canvasWidth={1000}
-        canvasHeight={500}
-      />
-      <div className="flex flex-row space-x-10">
-        <button onClick={() => canvas.current.undo()}>Undo</button>
-        <button onClick={() => canvas.current.clear()}>Clear</button>
+    <Link to={`/sketches/${id}`}>
+      <div className="w-50 bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-200 hover:cursor-pointer">
+        <div className="w-full h-30 overflow-hidden">
+          <img
+            src={picture}
+            alt={name}
+            className="object-cover w-full h-full"
+          />
+        </div>
+        <div className="p-2 text-center">
+          <p className="text-[10px] text-gray-500">{date}</p>
+          <p className="text-xs font-medium text-gray-800">{name}</p>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

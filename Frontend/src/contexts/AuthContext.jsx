@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import AuthContext from "./AuthContextCreate";
 import axios from "axios";
 import { toast } from "react-toastify";
+const apiUrl = import.meta.env.VITE_API_URL;
+
 function AuthProvider({ children }) {
   const [user, setUser] = useState({});
 
@@ -35,14 +37,13 @@ function AuthProvider({ children }) {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(
-        "http://127.0.0.1:3000/DoodleDuo/api/users/login",
-        {
-          email,
-          password,
-        }
-      );
-      const { token, user } = res.data;
+      const res = await axios.post(`${apiUrl}/users/login`, {
+        email,
+        password,
+      });
+
+      const { token } = res.data;
+      const { user } = res.data.data;
 
       localStorage.setItem("token-DoodleDuo", token);
       localStorage.setItem("user-DoodleDuo", JSON.stringify(user));
@@ -58,7 +59,11 @@ function AuthProvider({ children }) {
           toastId: "missing info",
         });
       } else {
-        console.error("Login error:", error);
+        toast.error("Request Failed", {
+          position: "top-center",
+          autoClose: 3000,
+          toastId: "missing info",
+        });
       }
     }
     setIsLoading(false);
@@ -75,10 +80,12 @@ function AuthProvider({ children }) {
     console.log(email);
     setIsLoading(true);
     try {
-      const res = await axios.post(
-        "http://127.0.0.1:3000/DoodleDuo/api/users/signup",
-        { firstName, lastName, email, password }
-      );
+      const res = await axios.post(`${apiUrl}/users/signup`, {
+        firstName,
+        lastName,
+        email,
+        password,
+      });
 
       const { token } = res.data;
       const { user } = res.data.data;
@@ -99,7 +106,11 @@ function AuthProvider({ children }) {
           toastId: "missing info",
         });
       } else {
-        console.error("Sign up error:", error);
+        toast.error("Request Failed", {
+          position: "top-center",
+          autoClose: 3000,
+          toastId: "missing info",
+        });
       }
     }
     setIsLoading(false);

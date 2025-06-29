@@ -1,9 +1,14 @@
 import Login from "../components/Login";
 import Signup from "../components/Signup";
 import { useState, useEffect } from "react";
+import useAuth from "../contexts/useAuth";
+import { useNavigate } from "react-router-dom";
 
 function Home({ mode }) {
   const [currentAnimation, setCurrentAnimation] = useState(0);
+  const { isAuthenticated } = useAuth();
+
+  const navigate = useNavigate();
 
   const animations = [
     "✏️ Draw together in real-time",
@@ -18,6 +23,11 @@ function Home({ mode }) {
     return () => clearInterval(interval);
   }, [animations.length]);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/sketches");
+    }
+  }, [isAuthenticated, navigate]);
   return (
     <div className="h-screen flex overflow-hidden">
       {/* Left Section - Login/Signup Form */}

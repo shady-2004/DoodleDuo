@@ -22,7 +22,7 @@ function Login() {
   function handleSubmit(e) {
     e.preventDefault();
 
-    if (email === "" || password === "") {
+    if (email.trim() === "" || password.trim() === "") {
       toast.error("Please provide email and password", {
         position: "top-center",
         autoClose: 3000,
@@ -38,11 +38,11 @@ function Login() {
       });
       return;
     }
-    login(email, password);
+    login(email.trim(), password.trim());
   }
 
   return (
-    <div className="rounded-2xl p-6 border-2 border-gray-300 w-full max-w-sm mx-auto shadow-md bg-white">
+    <div className="rounded-2xl p-6 border-2 border-gray-300 w-full max-w-sm mx-auto shadow-md bg-white ">
       <form className="space-y-5" onSubmit={handleSubmit}>
         <h2 className="text-lg font-semibold text-center text-gray-800">
           Log In

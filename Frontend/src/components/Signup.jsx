@@ -36,11 +36,11 @@ function Signup() {
   function handleSubmit(e) {
     e.preventDefault();
     if (
-      firstName === "" ||
-      lastName === "" ||
-      email === "" ||
-      password === "" ||
-      confirmPassword === ""
+      firstName.trim() === "" ||
+      lastName.trim() === "" ||
+      email.trim() === "" ||
+      password.trim() === "" ||
+      confirmPassword.trim() === ""
     ) {
       toast.error("Please fill in all fields", {
         position: "top-center",
@@ -65,7 +65,7 @@ function Signup() {
       });
       return;
     }
-    signup(firstName, lastName, email, password);
+    signup(firstName.trim(), lastName.trim(), email.trim(), password.trim());
   }
 
   return (
