@@ -12,13 +12,17 @@ const addSketchToUser = catchAsync(
     if (user.sketches.length >= 6) {
       return next(new AppError("You can only store up to 6 sketches", 403));
     }
-    if (!req.body.name) {
+
+    // Trim the sketch name
+    const trimmedName = req.body.name?.trim();
+
+    if (!trimmedName) {
       return next(new AppError("No sketch name provided", 403));
     }
 
     user.sketches.push({
       data: req.body.sketchData,
-      name: req.body.name,
+      name: trimmedName,
     });
     await user.save();
     res.status(201).json({

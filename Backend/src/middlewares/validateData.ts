@@ -6,14 +6,26 @@ const validateSignUpData = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, firstName, lastName } = req.body as userIn;
     console.log(req.body);
-    if (!email || !password || !firstName || !lastName) {
+
+    // Trim all fields
+    const trimmedEmail = email?.trim();
+    const trimmedPassword = password?.trim();
+    const trimmedFirstName = firstName?.trim();
+    const trimmedLastName = lastName?.trim();
+
+    if (
+      !trimmedEmail ||
+      !trimmedPassword ||
+      !trimmedFirstName ||
+      !trimmedLastName
+    ) {
       return next(new AppError("Please provide all required fields", 400));
     }
     req.body = {
-      email,
-      password,
-      firstName,
-      lastName,
+      email: trimmedEmail,
+      password: trimmedPassword,
+      firstName: trimmedFirstName,
+      lastName: trimmedLastName,
     };
     next();
   }
@@ -25,10 +37,22 @@ const validateLoginData = catchAsync(
       email?: string;
       password?: string;
     };
+
+    // Trim all fields
+    const trimmedEmail = email?.trim();
+    const trimmedPassword = password?.trim();
+
     //Check for email and password fields
-    if (!email || !password) {
+    if (!trimmedEmail || !trimmedPassword) {
       return next(new AppError("Please provide email and password!", 400));
     }
+
+    // Update req.body with trimmed values
+    req.body = {
+      email: trimmedEmail,
+      password: trimmedPassword,
+    };
+
     next();
   }
 );
