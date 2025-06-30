@@ -12,6 +12,6 @@ router
   .route("/:id")
   .get(sketchController.getUserSketch)
   .delete(sketchController.deleteUserSketch)
-  .patch(sketchController.deleteUserSketch);
+  .patch(sketchController.updateUserSketch);
 
 export default router;
