@@ -21,13 +21,14 @@ app.use(
     credentials: true,
   })
 );
+app.set("trust proxy", 1);
 
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 100,
 });
 
-app.use("/DoodleDuo", limiter);
+app.use("/DoodleDuo/api", limiter);
 
 app.use(express.json({ limit: "10kb" }));
 
@@ -37,11 +38,17 @@ if (process.env.NODE_ENV !== "production") {
   app.use(morgan("combined"));
 }
 
-app.use("/DoodleDuo/users", userRouter);
+app.use("/DoodleDuo/api/users", userRouter);
 
 // app.all("*", (req, res, next) => {
 //   next(new AppError(`Can't find ${req.originalUrl} on this server! `, 404));
 // });
 app.use(globalErrorHanlder);
+
+process.on("uncaughtException", (err) => {
+  console.error("💥 Uncaught Exception! Shutting down...");
+  console.error(err.name, err.message);
+  process.exit(1); // Optional but clean
+});
 
 export default app;

@@ -10,7 +10,6 @@ import validator from "validator";
 const sketchSchema = new mongoose.Schema({
   data: {
     type: mongoose.Schema.Types.Mixed,
-    required: true,
   },
   name: {
     type: String,
