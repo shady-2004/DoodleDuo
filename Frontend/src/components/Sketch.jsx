@@ -137,7 +137,7 @@ function Sketch({ sketchData, setSketchData, saveData }) {
         <div className="relative group">
           <button
             onClick={() => canvasRef.current.undo()}
-            className="p-2 hover:scale-110 transition"
+            className="p-2 hover:scale-110 transition cursor-pointer"
           >
             <FaUndo size={20} />
           </button>
@@ -150,7 +150,7 @@ function Sketch({ sketchData, setSketchData, saveData }) {
         <div className="relative group">
           <button
             onClick={() => canvasRef.current.redo()}
-            className="p-2 hover:scale-110 transition"
+            className="p-2 hover:scale-110 transition cursor-pointer"
           >
             <FaRedo size={20} />
           </button>
@@ -163,7 +163,7 @@ function Sketch({ sketchData, setSketchData, saveData }) {
         <div className="relative group">
           <button
             onClick={() => canvasRef.current.clearCanvas()}
-            className="p-2 hover:scale-110 transition"
+            className="p-2 hover:scale-110 transition cursor-pointer"
           >
             <FaTrashAlt size={20} />
           </button>
@@ -176,7 +176,7 @@ function Sketch({ sketchData, setSketchData, saveData }) {
         <div className="relative group">
           <button
             onClick={() => setShowColorPicker(!showColorPicker)}
-            className="p-2 hover:scale-110 transition"
+            className="p-2 hover:scale-110 transition cursor-pointer"
           >
             <IoIosColorPalette size={25} color={currentColor} />
           </button>
