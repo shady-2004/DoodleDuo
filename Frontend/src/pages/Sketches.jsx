@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import Sketch from "../components/Sketch";
+import SketchCard from "../components/SketchCard";
 import axios from "axios";
 import useAuth from "../contexts/useAuth";
 import { toast } from "react-toastify";
 import AddSketch from "../components/AddSketch";
 import SketchForm from "../components/SketchForm";
+import { PropagateLoader } from "react-spinners";
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 function Sketches() {
-  console.log(apiUrl);
   const [sketches, setSketches] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const toggleForm = () => setShowForm(!showForm);
@@ -58,13 +59,15 @@ function Sketches() {
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Sketches</h1>
 
         {isLoading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
+          <div className="flex items-center justify-center h-screen">
+            <PropagateLoader />
+          </div>
         ) : (
           <div
             className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-20 gap-y-10 w-full max-w-6xl  `}
           >
             {sketches.map((sketch) => (
-              <Sketch
+              <SketchCard
                 key={sketch.id}
                 id={sketch.id}
                 picture={sketch.picture}

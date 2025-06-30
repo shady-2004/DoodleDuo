@@ -111,6 +111,7 @@ const deleteUserSketch = catchAsync(
 );
 const updateUserSketch = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body);
     const user = await User.findById(req.user?.id);
     if (!user) {
       return next(new AppError("User not found", 404));
@@ -124,11 +125,11 @@ const updateUserSketch = catchAsync(
     if (sketchIndex === -1) {
       return next(new AppError("User does not own sketch with that id", 404));
     }
-    if (!req.body.sketchData || !req.body.sketchPicture) {
+    if (!req.body.sketchData) {
       return next(new AppError("Missing sketch data sketch data ", 403));
     }
     user.sketches[sketchIndex].data = req.body.sketchData;
-    user.sketches[sketchIndex].picture = req.body.sketchPicture;
+    // user.sketches[sketchIndex].picture = req.body.sketchPicture;
     await user.save();
     res.status(204).json({
       status: "success",
