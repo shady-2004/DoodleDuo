@@ -45,4 +45,10 @@ app.use("/DoodleDuo/api/users", userRouter);
 // });
 app.use(globalErrorHanlder);
 
+process.on("uncaughtException", (err) => {
+  console.error("💥 Uncaught Exception! Shutting down...");
+  console.error(err.name, err.message);
+  process.exit(1); // Optional but clean
+});
+
 export default app;
