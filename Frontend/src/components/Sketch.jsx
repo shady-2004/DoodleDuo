@@ -1,20 +1,27 @@
-import React, { useRef, useState, useEffect } from "react";
-import { ReactSketchCanvas } from "react-sketch-canvas";
+import React, { useRef, useState, useEffect, use } from "react";
+import { Stage, Layer, Line } from "react-konva";
 import { FaUndo, FaRedo, FaTrashAlt } from "react-icons/fa";
 import { IoIosColorPalette } from "react-icons/io";
-import hash from "object-hash";
+import { v4 as uuidv4 } from "uuid";
 
-function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
-  const canvasRef = useRef(null);
+function Sketch({
+  sketchData,
+  setSketchData,
+  saveData,
+  isGuest,
+  sessionCode,
+  socket,
+}) {
+  const [lines, setLines] = useState([]);
+  const isDrawing = useRef(false);
+  const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColor, setCurrentColor] = useState("black");
-  const lastHash = useRef("");
-
   const BASE_W = 800;
   const BASE_H = 400;
-  const MIN_W = 400; // Minimum display width
-  const MIN_H = 200; // Minimum display height
+  const MIN_W = 400;
+  const MIN_H = 200;
   const colors = [
     "#000000",
     "#FF0000",
@@ -31,69 +38,120 @@ function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
   ];
 
   useEffect(() => {
-    if (sketchData) {
-      canvasRef.current.clearCanvas();
-      canvasRef.current.loadPaths(sketchData);
-    }
-  }, [sketchData]);
-
-  useEffect(() => {
-    if (!isGuest) setInterval(checkForChangesAndSave, 1000 * 5);
-  }, []);
-
-  useEffect(() => {
-    function update() {
+    function updateScale() {
       const maxW = window.innerWidth * 0.95;
       const maxH = window.innerHeight * 0.7;
 
       const sx = maxW / BASE_W;
       const sy = maxH / BASE_H;
-      let calculatedScale = Math.min(sx, sy, 1);
+      let newScale = Math.min(sx, sy, 1);
 
-      const scaledW = BASE_W * calculatedScale;
-      const scaledH = BASE_H * calculatedScale;
+      const scaledW = BASE_W * newScale;
+      const scaledH = BASE_H * newScale;
 
-      if (scaledW < MIN_W) {
-        calculatedScale = MIN_W / BASE_W;
-      }
-      if (scaledH < MIN_H) {
-        calculatedScale = Math.max(calculatedScale, MIN_H / BASE_H);
-      }
+      if (scaledW < MIN_W) newScale = MIN_W / BASE_W;
+      if (scaledH < MIN_H) newScale = Math.max(newScale, MIN_H / BASE_H);
 
-      setScale(calculatedScale);
+      setScale(newScale);
     }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
   }, []);
 
-  // Redraw canvas when scale changes to ensure paths are properly displayed
   useEffect(() => {
-    if (sketchData && canvasRef.current) {
-      canvasRef.current.clearCanvas();
-      canvasRef.current.loadPaths(sketchData);
+    if (sketchData) {
+      setLines(sketchData);
     }
-  }, [scale, sketchData]);
-  async function checkForChangesAndSave() {
-    const sketch = await canvasRef.current?.exportPaths();
-    const normalizedData = sketch.map((stroke) => ({
-      strokeColor: stroke.strokeColor,
-      strokeWidth: stroke.strokeWidth,
-      paths: stroke.paths.map((pt) => ({
-        x: Math.round(pt.x * 10) / 10,
-        y: Math.round(pt.y * 10) / 10,
-      })),
-    }));
+  }, [sketchData]);
 
-    const currentHash = hash(normalizedData, {
-      unorderedObjects: true,
-      unorderedArrays: false,
+  // Hashing function using browser crypto API
+  async function hashLines(data) {
+    const encoded = new TextEncoder().encode(JSON.stringify(data));
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  // Save sketchData every 3 seconds only if changed (skipping for guests)
+  useEffect(() => {
+    if (isGuest) return; // no auto-save for guests
+
+    let lastHash = "";
+
+    const interval = setInterval(async () => {
+      if (lines.length === 0) return; // skip empty
+
+      const currentHash = await hashLines(lines);
+      if (currentHash !== lastHash) {
+        lastHash = currentHash;
+        saveData(lines);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [lines, setSketchData, saveData, isGuest]);
+
+  function handleMouseDown(e) {
+    isDrawing.current = true;
+    const stage = stageRef.current;
+    const point = stage.getPointerPosition();
+    setLines([
+      ...lines,
+      {
+        id: uuidv4(),
+        points: [point.x, point.y],
+        stroke: currentColor,
+        strokeWidth: 4,
+      },
+    ]);
+  }
+
+  function handleMouseMove() {
+    if (!isDrawing.current) return;
+    const stage = stageRef.current;
+    const point = stage.getPointerPosition();
+    const lastLine = lines[lines.length - 1];
+    const updatedLines = [...lines];
+    lastLine.points = lastLine.points.concat([point.x, point.y]);
+    setLines(updatedLines);
+    if (!socket) return;
+    socket.emit("draw", {
+      sessionCode,
+      stroke: {
+        points: [point.x, point.y],
+        stroke: currentColor,
+        strokeWidth: 4,
+        id: lastLine.id,
+      },
     });
+  }
 
-    if (currentHash !== lastHash.current) {
-      lastHash.current = currentHash;
-      setSketchData(sketch);
-      saveData(sketch);
+  function handleMouseUp() {
+    isDrawing.current = false;
+    // Immediate save is optional; auto-save will handle this anyway
+  }
+
+  function undo() {
+    const updated = lines.slice(0, -1);
+    setLines(updated);
+    if (!isGuest) saveData(updated);
+
+    // Emit to socket for real-time sync
+    if (socket && sessionCode) {
+      socket.emit("undo", { sessionCode });
+    }
+  }
+
+  function clearCanvas() {
+    setLines([]);
+    setSketchData([]);
+    if (!isGuest) saveData([]);
+
+    // Emit to socket for real-time sync
+    if (socket && sessionCode) {
+      socket.emit("clear", { sessionCode });
     }
   }
 
@@ -102,40 +160,54 @@ function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
       className="flex flex-col items-center p-6 bg-gray-100 min-h-screen"
       style={{ minWidth: MIN_W + 100 }}
     >
-      {/* Parent constrains the maximum display area */}
       <div
         className="border-4 border-gray-700 rounded-xl shadow-2xl bg-white mb-6 overflow-hidden"
         style={{
           maxWidth: "95vw",
           maxHeight: "70vh",
-          minWidth: MIN_W + 16, // Add padding for border
-          minHeight: MIN_H + 16, // Add padding for border
-          padding: "0", // no extra padding
+          minWidth: MIN_W + 16,
+          minHeight: MIN_H + 16,
+          padding: "0",
         }}
         onClick={() => setShowColorPicker(false)}
       >
-        <ReactSketchCanvas
-          ref={canvasRef}
-          strokeColor={currentColor}
-          strokeWidth={4}
-          canvasColor="#fff"
+        <Stage
+          ref={stageRef}
           width={BASE_W * scale}
           height={BASE_H * scale}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
           style={{
             width: BASE_W * scale,
             height: BASE_H * scale,
             border: "2px solid #e5e7eb",
             borderRadius: "4px",
+            backgroundColor: "#fff",
           }}
-        />
+        >
+          <Layer>
+            {lines.map((line, i) => (
+              <Line
+                key={i}
+                points={line.points}
+                stroke={line.stroke}
+                strokeWidth={line.strokeWidth}
+                tension={0.5}
+                lineCap="round"
+                globalCompositeOperation="source-over"
+              />
+            ))}
+          </Layer>
+        </Stage>
       </div>
 
       <div className="flex space-x-4 relative z-20">
-        {/* Undo Button */}
         <div className="relative group">
           <button
-            onClick={() => canvasRef.current.undo()}
+            onClick={undo}
             className="p-2 hover:scale-110 transition cursor-pointer"
+            disabled={lines.length === 0}
           >
             <FaUndo size={20} />
           </button>
@@ -144,11 +216,11 @@ function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
           </span>
         </div>
 
-        {/* Redo Button */}
         <div className="relative group">
           <button
-            onClick={() => canvasRef.current.redo()}
-            className="p-2 hover:scale-110 transition cursor-pointer"
+            onClick={() => {}}
+            className="p-2 hover:scale-110 transition cursor-pointer opacity-50"
+            disabled
           >
             <FaRedo size={20} />
           </button>
@@ -157,11 +229,11 @@ function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
           </span>
         </div>
 
-        {/* Clear Button */}
         <div className="relative group">
           <button
-            onClick={() => canvasRef.current.clearCanvas()}
+            onClick={clearCanvas}
             className="p-2 hover:scale-110 transition cursor-pointer"
+            disabled={lines.length === 0}
           >
             <FaTrashAlt size={20} />
           </button>
@@ -170,7 +242,6 @@ function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
           </span>
         </div>
 
-        {/* Color Picker Button */}
         <div className="relative group">
           <button
             onClick={() => setShowColorPicker(!showColorPicker)}
@@ -182,7 +253,6 @@ function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
             Color
           </span>
 
-          {/* Color Picker */}
           {showColorPicker && (
             <div
               className="absolute bottom-full mb-10 left-1/2 -translate-x-1/2 bg-white border rounded shadow-lg p-2 z-50"
