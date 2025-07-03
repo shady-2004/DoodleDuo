@@ -4,7 +4,7 @@ import { FaUndo, FaRedo, FaTrashAlt } from "react-icons/fa";
 import { IoIosColorPalette } from "react-icons/io";
 import hash from "object-hash";
 
-function Sketch({ sketchData, setSketchData, saveData }) {
+function Sketch({ sketchData, setSketchData, saveData, isGuest }) {
   const canvasRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -38,7 +38,7 @@ function Sketch({ sketchData, setSketchData, saveData }) {
   }, [sketchData]);
 
   useEffect(() => {
-    setInterval(checkForChangesAndSave, 1000 * 5);
+    if (!isGuest) setInterval(checkForChangesAndSave, 1000 * 5);
   }, []);
 
   useEffect(() => {
@@ -76,7 +76,6 @@ function Sketch({ sketchData, setSketchData, saveData }) {
   }, [scale, sketchData]);
   async function checkForChangesAndSave() {
     const sketch = await canvasRef.current?.exportPaths();
-
     const normalizedData = sketch.map((stroke) => ({
       strokeColor: stroke.strokeColor,
       strokeWidth: stroke.strokeWidth,
@@ -91,7 +90,6 @@ function Sketch({ sketchData, setSketchData, saveData }) {
       unorderedArrays: false,
     });
 
-    console.log(lastHash.current, currentHash);
     if (currentHash !== lastHash.current) {
       lastHash.current = currentHash;
       setSketchData(sketch);
