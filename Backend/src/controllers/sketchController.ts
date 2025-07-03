@@ -115,7 +115,6 @@ const deleteUserSketch = catchAsync(
 );
 const updateUserSketch = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
     const user = await User.findById(req.user?.id);
     if (!user) {
       return next(new AppError("User not found", 404));

@@ -12,6 +12,7 @@ function socketHandlers(io: Server, socket: Socket) {
       sketchId,
       sketchData
     );
+    console.log("test");
     socket.join(sessionCode);
     socket.emit("session-created", sessionCode);
   });

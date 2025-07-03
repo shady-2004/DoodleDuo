@@ -64,7 +64,7 @@ function SketchForm({ toggleForm, setSketches }) {
       {/* Close button */}
       <button
         onClick={toggleForm}
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
       >
         <svg
           className="w-5 h-5"

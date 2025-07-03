@@ -5,14 +5,18 @@ import useAuth from "../contexts/useAuth";
 import { toast } from "react-toastify";
 import AddSketch from "../components/AddSketch";
 import SketchForm from "../components/SketchForm";
+import JoinSession from "../components/JoinSession";
+
 import { PropagateLoader } from "react-spinners";
+import Join from "../components/Join";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 function Sketches() {
   const [sketches, setSketches] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const toggleForm = () => setShowForm(!showForm);
+  const [writeCode, setWriteCode] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const { token, logout } = useAuth();
   useEffect(() => {
@@ -53,11 +57,13 @@ function Sketches() {
     >
       <div
         className={`flex flex-col items-center ${
-          showForm ? "blur-xs" : "blur-none"
+          showForm || writeCode ? "blur-xs" : "blur-none"
         }`}
       >
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Sketches</h1>
-
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">Sketches</h1>
+        <div className="mb-4">
+          <Join toggleForm={() => setWriteCode(true)} />
+        </div>
         {isLoading ? (
           <div className="flex items-center justify-center h-screen">
             <PropagateLoader />
@@ -75,13 +81,19 @@ function Sketches() {
                 name={sketch.name}
               />
             ))}
-            {sketches.length < 8 && <AddSketch toggleForm={toggleForm} />}
+            {sketches.length < 8 && (
+              <AddSketch toggleForm={() => setShowForm(true)} />
+            )}
           </div>
         )}
       </div>
       {showForm && (
-        <SketchForm toggleForm={toggleForm} setSketches={setSketches} />
+        <SketchForm
+          toggleForm={() => setShowForm(false)}
+          setSketches={setSketches}
+        />
       )}
+      {writeCode && <JoinSession toggleForm={() => setWriteCode(false)} />}
     </div>
   );
 }

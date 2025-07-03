@@ -34,6 +34,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/sketches/session/:code"
+              element={
+                <ProtectedRoute>
+                  <Session />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<div>404 Not Found</div>} />
           </Routes>
         </BrowserRouter>
