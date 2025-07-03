@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import useAuth from "../contexts/useAuth";
 import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { PropagateLoader } from "react-spinners";
 import connect from "../sockets/client";
 
@@ -17,7 +17,6 @@ function Session() {
   const { id, code } = useParams();
 
   const isGuest = code ? true : false;
-
   const { token, logout, user } = useAuth();
   const navigate = useNavigate();
 
@@ -71,8 +70,29 @@ function Session() {
         });
 
         s.on("session-joined", (data) => {
+          console.log(data);
           setSketchData(data.sketchData || []);
           setIsLoading(false);
+
+          s.on("draw", (data) => {
+            setSketchData((prevSketchData) => {
+              const idx = prevSketchData.findIndex(
+                (line) => line.id === data.stroke.id
+              );
+              const newSketchData = [...prevSketchData];
+              if (idx !== -1) {
+                newSketchData[idx].points.push(...data.stroke.points);
+              } else {
+                newSketchData.push({
+                  id: data.stroke.id,
+                  points: data.stroke.points,
+                  stroke: data.stroke.stroke,
+                  strokeWidth: data.stroke.strokeWidth,
+                });
+              }
+              return newSketchData;
+            });
+          });
         });
 
         s.on("session-join-failed", () => {
@@ -125,6 +145,26 @@ function Session() {
           toastId: "session created",
         });
         setSessionCode(data);
+
+        s.on("draw", (data) => {
+          setSketchData((prevSketchData) => {
+            const idx = prevSketchData.findIndex(
+              (line) => line.id === data.stroke.id
+            );
+            const newSketchData = [...prevSketchData];
+            if (idx !== -1) {
+              newSketchData[idx].points.push(...data.stroke.points);
+            } else {
+              newSketchData.push({
+                id: data.stroke.id,
+                points: data.stroke.points,
+                stroke: data.stroke.stroke,
+                strokeWidth: data.stroke.strokeWidth,
+              });
+            }
+            return newSketchData;
+          });
+        });
       });
     });
     s.on("connect_error", (err) => {
@@ -140,7 +180,7 @@ function Session() {
 
   async function saveData(sketch) {
     try {
-      const response = await axios.patch(
+      await axios.patch(
         apiUrl + `/users/sketch/${id}`,
         { sketchData: JSON.stringify(sketch) },
         {
@@ -196,6 +236,8 @@ function Session() {
             setSketchData={setSketchData}
             saveData={saveData}
             isGuest={isGuest}
+            sessionCode={isGuest ? code : sessionCode}
+            socket={socket}
           />
         </div>
       )}

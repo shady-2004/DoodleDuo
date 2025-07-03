@@ -1,12 +1,10 @@
-type SketchData = {
-  strokes: Stroke[];
-};
+type SketchData = Stroke[];
 
 type Stroke = {
   id: string;
-  color: string;
-  width: number;
-  points: { x: number; y: number }[];
+  stroke: string;
+  strokeWidth: number;
+  points: number[];
 };
 
 type SessionData = {
