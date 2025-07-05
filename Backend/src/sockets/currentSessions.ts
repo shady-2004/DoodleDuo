@@ -1,3 +1,5 @@
+import { v1 as uuidv4 } from "uuid";
+
 type SketchData = Stroke[];
 
 type Stroke = {
@@ -46,12 +48,7 @@ function joinSession(
 }
 
 function generateSessionCode(length = 10): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstxyz";
-  let code = "";
-  for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  return uuidv4();
 }
 
 const sessions = new Map<string, SessionData>();
