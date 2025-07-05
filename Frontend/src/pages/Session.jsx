@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import useAuth from "../contexts/useAuth";
 import { toast } from "react-toastify";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PropagateLoader } from "react-spinners";
 import connect from "../sockets/client";
 
@@ -79,19 +79,35 @@ function Session() {
               const idx = prevSketchData.findIndex(
                 (line) => line.id === data.stroke.id
               );
-              const newSketchData = [...prevSketchData];
               if (idx !== -1) {
-                newSketchData[idx].points.push(...data.stroke.points);
+                const updatedLine = {
+                  ...prevSketchData[idx],
+                  points: [
+                    ...prevSketchData[idx].points,
+                    ...data.stroke.points,
+                  ],
+                };
+                return [
+                  ...prevSketchData.slice(0, idx),
+                  updatedLine,
+                  ...prevSketchData.slice(idx + 1),
+                ];
               } else {
-                newSketchData.push({
-                  id: data.stroke.id,
-                  points: data.stroke.points,
-                  stroke: data.stroke.stroke,
-                  strokeWidth: data.stroke.strokeWidth,
-                });
+                return [
+                  ...prevSketchData,
+                  {
+                    id: data.stroke.id,
+                    points: data.stroke.points,
+                    stroke: data.stroke.stroke,
+                    strokeWidth: data.stroke.strokeWidth,
+                  },
+                ];
               }
-              return newSketchData;
             });
+          });
+
+          s.on("clear", () => {
+            setSketchData([]);
           });
         });
 
@@ -151,19 +167,32 @@ function Session() {
             const idx = prevSketchData.findIndex(
               (line) => line.id === data.stroke.id
             );
-            const newSketchData = [...prevSketchData];
             if (idx !== -1) {
-              newSketchData[idx].points.push(...data.stroke.points);
+              const updatedLine = {
+                ...prevSketchData[idx],
+                points: [...prevSketchData[idx].points, ...data.stroke.points],
+              };
+              return [
+                ...prevSketchData.slice(0, idx),
+                updatedLine,
+                ...prevSketchData.slice(idx + 1),
+              ];
             } else {
-              newSketchData.push({
-                id: data.stroke.id,
-                points: data.stroke.points,
-                stroke: data.stroke.stroke,
-                strokeWidth: data.stroke.strokeWidth,
-              });
+              return [
+                ...prevSketchData,
+                {
+                  id: data.stroke.id,
+                  points: data.stroke.points,
+                  stroke: data.stroke.stroke,
+                  strokeWidth: data.stroke.strokeWidth,
+                },
+              ];
             }
-            return newSketchData;
           });
+        });
+
+        s.on("clear", () => {
+          setSketchData([]);
         });
       });
     });

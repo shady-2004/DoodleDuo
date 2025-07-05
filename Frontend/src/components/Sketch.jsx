@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, use } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Stage, Layer, Line } from "react-konva";
 import { FaUndo, FaRedo, FaTrashAlt } from "react-icons/fa";
 import { IoIosColorPalette } from "react-icons/io";
@@ -18,6 +18,7 @@ function Sketch({
   const [scale, setScale] = useState(1);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColor, setCurrentColor] = useState("black");
+  const [curLineId, setCurLineId] = useState(null);
   const BASE_W = 800;
   const BASE_H = 400;
   const MIN_W = 400;
@@ -61,12 +62,23 @@ function Sketch({
   }, []);
 
   useEffect(() => {
-    if (sketchData) {
-      setLines(sketchData);
-    }
+    if (!Array.isArray(sketchData)) return;
+    if (sketchData.length === 0) setLines([]);
+    setLines((prevLines) => {
+      const sketchMap = new Map(sketchData.map((line) => [line.id, line]));
+
+      const merged = [
+        // Keep lines that are not in sketchData (i.e. local only)
+        ...prevLines.filter((line) => !sketchMap.has(line.id)),
+
+        // Add or replace lines from sketchData
+        ...sketchData,
+      ];
+
+      return merged;
+    });
   }, [sketchData]);
 
-  // Hashing function using browser crypto API
   async function hashLines(data) {
     const encoded = new TextEncoder().encode(JSON.stringify(data));
     const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
@@ -74,7 +86,6 @@ function Sketch({
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  // Save sketchData every 3 seconds only if changed (skipping for guests)
   useEffect(() => {
     if (isGuest) return; // no auto-save for guests
 
@@ -91,40 +102,59 @@ function Sketch({
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [lines, setSketchData, saveData, isGuest]);
+  }, [lines, saveData, isGuest]);
 
-  function handleMouseDown(e) {
+  function handleMouseDown() {
     isDrawing.current = true;
     const stage = stageRef.current;
     const point = stage.getPointerPosition();
-    setLines([
-      ...lines,
-      {
-        id: uuidv4(),
-        points: [point.x, point.y],
-        stroke: currentColor,
-        strokeWidth: 4,
-      },
-    ]);
+    const id = uuidv4();
+    setCurLineId(id);
+    const newLine = {
+      id,
+      points: [point.x, point.y],
+      stroke: currentColor,
+      strokeWidth: 4,
+    };
+
+    const updatedLines = [...lines, newLine];
+    setLines(updatedLines);
   }
 
   function handleMouseMove() {
     if (!isDrawing.current) return;
+
     const stage = stageRef.current;
     const point = stage.getPointerPosition();
-    const lastLine = lines[lines.length - 1];
-    const updatedLines = [...lines];
-    lastLine.points = lastLine.points.concat([point.x, point.y]);
-    setLines(updatedLines);
-    if (!socket) return;
-    socket.emit("draw", {
-      sessionCode,
-      stroke: {
-        points: [point.x, point.y],
-        stroke: currentColor,
-        strokeWidth: 4,
-        id: lastLine.id,
-      },
+
+    setLines((prevLines) => {
+      const idx = prevLines.findIndex((line) => line.id === curLineId);
+      if (idx === -1) return prevLines; // Line not found, no update
+
+      const updatedLine = {
+        ...prevLines[idx],
+        points: [...prevLines[idx].points, point.x, point.y],
+      };
+
+      const updatedLines = [
+        ...prevLines.slice(0, idx),
+        updatedLine,
+        ...prevLines.slice(idx + 1),
+      ];
+
+      if (socket && sessionCode) {
+        socket.emit("draw", {
+          sessionCode,
+          stroke: {
+            points: [point.x, point.y],
+            stroke: updatedLine.stroke,
+            strokeWidth: updatedLine.strokeWidth,
+            id: updatedLine.id,
+          },
+        });
+      }
+
+      return updatedLines;
     });
   }
 
