@@ -9,6 +9,8 @@ import connect from "../sockets/client";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
+import handlers from "../sockets/socketHandlers";
+
 function Session() {
   const [isLoading, setIsLoading] = useState(true);
   const [sketchData, setSketchData] = useState([]);
@@ -74,41 +76,7 @@ function Session() {
           setSketchData(data.sketchData || []);
           setIsLoading(false);
 
-          s.on("draw", (data) => {
-            setSketchData((prevSketchData) => {
-              const idx = prevSketchData.findIndex(
-                (line) => line.id === data.stroke.id
-              );
-              if (idx !== -1) {
-                const updatedLine = {
-                  ...prevSketchData[idx],
-                  points: [
-                    ...prevSketchData[idx].points,
-                    ...data.stroke.points,
-                  ],
-                };
-                return [
-                  ...prevSketchData.slice(0, idx),
-                  updatedLine,
-                  ...prevSketchData.slice(idx + 1),
-                ];
-              } else {
-                return [
-                  ...prevSketchData,
-                  {
-                    id: data.stroke.id,
-                    points: data.stroke.points,
-                    stroke: data.stroke.stroke,
-                    strokeWidth: data.stroke.strokeWidth,
-                  },
-                ];
-              }
-            });
-          });
-
-          s.on("clear", () => {
-            setSketchData([]);
-          });
+          handlers(s, setSketchData);
         });
 
         s.on("session-join-failed", () => {
@@ -162,38 +130,7 @@ function Session() {
         });
         setSessionCode(data);
 
-        s.on("draw", (data) => {
-          setSketchData((prevSketchData) => {
-            const idx = prevSketchData.findIndex(
-              (line) => line.id === data.stroke.id
-            );
-            if (idx !== -1) {
-              const updatedLine = {
-                ...prevSketchData[idx],
-                points: [...prevSketchData[idx].points, ...data.stroke.points],
-              };
-              return [
-                ...prevSketchData.slice(0, idx),
-                updatedLine,
-                ...prevSketchData.slice(idx + 1),
-              ];
-            } else {
-              return [
-                ...prevSketchData,
-                {
-                  id: data.stroke.id,
-                  points: data.stroke.points,
-                  stroke: data.stroke.stroke,
-                  strokeWidth: data.stroke.strokeWidth,
-                },
-              ];
-            }
-          });
-        });
-
-        s.on("clear", () => {
-          setSketchData([]);
-        });
+        handlers(s, setSketchData);
       });
     });
     s.on("connect_error", (err) => {
