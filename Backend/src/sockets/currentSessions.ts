@@ -49,7 +49,7 @@ function createSession(
         })
       : [];
     if (batch.length > 0) io.to(sessionCode).emit("draw", batch);
-  }, 100);
+  }, 50);
   socketIdToSessionCode.set(socketId, sessionCode);
 }
 
