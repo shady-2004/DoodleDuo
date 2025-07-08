@@ -1,30 +1,21 @@
-const handlers = (socket, setSketchData) => {
+const handlers = (socket, setSketchData, user) => {
   socket.on("draw", (data) => {
     setSketchData((prevSketchData) => {
-      const idx = prevSketchData.findIndex(
-        (line) => line.id === data.stroke.id
-      );
-      if (idx !== -1) {
-        const updatedLine = {
-          ...prevSketchData[idx],
-          points: [...prevSketchData[idx].points, ...data.stroke.points],
-        };
-        return [
-          ...prevSketchData.slice(0, idx),
-          updatedLine,
-          ...prevSketchData.slice(idx + 1),
-        ];
-      } else {
-        return [
-          ...prevSketchData,
-          {
-            id: data.stroke.id,
-            points: data.stroke.points,
-            stroke: data.stroke.stroke,
-            strokeWidth: data.stroke.strokeWidth,
-          },
-        ];
-      }
+      // const newStrokes = data.filter((stroke) => stroke.userId !== user.id);
+      const newStrokes = data;
+
+      const toAppend = newStrokes.slice(0);
+
+      const finalData = prevSketchData.map((el) => {
+        const idx = newStrokes.findIndex((stroke) => el.id === stroke.id);
+        if (idx === -1) return el;
+        else {
+          toAppend.splice(idx, 1);
+          return newStrokes[idx];
+        }
+      });
+      finalData.push(...toAppend);
+      return finalData;
     });
   });
 

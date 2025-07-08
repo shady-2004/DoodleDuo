@@ -8,6 +8,7 @@ export type Stroke = {
   stroke: string;
   strokeWidth: number;
   points: number[];
+  userId?: string;
 };
 
 type SessionData = {

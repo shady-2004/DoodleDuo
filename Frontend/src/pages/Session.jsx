@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import useAuth from "../contexts/useAuth";
 import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PropagateLoader } from "react-spinners";
 import connect from "../sockets/client";
 
@@ -14,7 +14,7 @@ import handlers from "../sockets/socketHandlers";
 function Session() {
   const [isLoading, setIsLoading] = useState(true);
   const [sketchData, setSketchData] = useState([]);
-  const [socket, setSocket] = useState(null);
+  const socket = useRef(null);
   const [sessionCode, setSessionCode] = useState(null);
   const { id, code } = useParams();
 
@@ -61,8 +61,7 @@ function Session() {
 
       s.on("connect", () => {
         console.log("✅ Socket connected:", s.id);
-
-        setSocket(s); // Save to state or context
+        socket.current = s; // Save to state or context
 
         // Now it's safe to emit join-session
         s.emit("join-session", {
@@ -75,7 +74,7 @@ function Session() {
           setSketchData(data.sketchData || []);
           setIsLoading(false);
 
-          handlers(s, setSketchData);
+          handlers(s, setSketchData, user);
         });
 
         s.on("session-join-failed", (message) => {
@@ -86,6 +85,7 @@ function Session() {
             toastId: "join error",
           });
           navigate("/sketches");
+          s.disconnect();
         });
       });
 
@@ -104,6 +104,15 @@ function Session() {
 
     if (isGuest) fetchGuestSketch();
     else fetchSketch();
+
+    return () => {
+      console.log(socket);
+      if (socket.current !== null) {
+        console.log("bye bye");
+
+        socket.current.disconnect();
+      }
+    };
   }, [id, token, isGuest, navigate, logout]);
 
   async function createSession() {
@@ -113,7 +122,7 @@ function Session() {
     s.on("connect", () => {
       console.log("✅ Socket connected:", s.id);
 
-      setSocket(s); // Save to state or context
+      socket.current = s;
 
       s.emit("create-session", {
         userId: user.id,
@@ -130,15 +139,15 @@ function Session() {
         });
         setSessionCode(data);
 
-        handlers(s, setSketchData);
+        handlers(s, setSketchData, user);
       });
     });
     s.on("connect_error", (err) => {
-      console.error("❌ Socket connection error:", err);
-      toast.error("Socket connection failed", {
+      console.error("❌ Session creation failed:", err);
+      toast.error("Session creation failed", {
         position: "top-center",
         autoClose: 3000,
-        toastId: "socket error",
+        toastId: "session error",
       });
       // navigate("/sketches");
     });
@@ -203,7 +212,7 @@ function Session() {
             saveData={saveData}
             isGuest={isGuest}
             sessionCode={isGuest ? code : sessionCode}
-            socket={socket}
+            socket={socket.current}
           />
         </div>
       )}

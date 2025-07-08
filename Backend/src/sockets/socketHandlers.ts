@@ -59,12 +59,14 @@ function socketHandlers(io: Server, socket: Socket) {
         stroke: stroke.stroke,
         strokeWidth: stroke.strokeWidth,
         points: [...stroke.points],
+        userId: stroke.userId,
       });
       updatedStroke = {
         id: stroke.id,
         stroke: stroke.stroke,
         strokeWidth: stroke.strokeWidth,
         points: [...stroke.points],
+        userId: stroke.userId,
       };
     } else {
       session.sketchData[idx].points.push(...stroke.points);
@@ -77,7 +79,7 @@ function socketHandlers(io: Server, socket: Socket) {
     const session = Session.sessions.get(sessionCode);
     if (!session) return;
     session.sketchData.splice(0);
-    socket.to(sessionCode).emit("clear");
+    io.to(sessionCode).emit("clear");
   });
 }
 export default socketHandlers;
