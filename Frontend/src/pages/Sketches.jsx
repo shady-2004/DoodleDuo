@@ -50,7 +50,7 @@ function Sketches() {
       }
     }
     fetchSketches();
-  }, []);
+  }, [logout, token]);
   return (
     <div
       className={`min-h-lg bg-gray-50 flex items-center justify-center px-4 relative`}

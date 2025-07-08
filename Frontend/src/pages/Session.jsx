@@ -72,15 +72,15 @@ function Session() {
         });
 
         s.on("session-joined", (data) => {
-          console.log(data);
           setSketchData(data.sketchData || []);
           setIsLoading(false);
 
           handlers(s, setSketchData);
         });
 
-        s.on("session-join-failed", () => {
-          toast.error("Failed to join session", {
+        s.on("session-join-failed", (message) => {
+          console.log(message);
+          toast.error(message, {
             position: "top-center",
             autoClose: 3000,
             toastId: "join error",

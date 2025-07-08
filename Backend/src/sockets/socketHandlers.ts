@@ -1,6 +1,12 @@
+import { set } from "mongoose";
 import Session from "./currentSessions";
 import { Server, Socket } from "socket.io";
+
 function socketHandlers(io: Server, socket: Socket) {
+  socket.on("disconnect", () => {
+    Session.leaveSession(socket.id);
+  });
+
   socket.on("create-session", ({ userId, userName, sketchId, sketchData }) => {
     const sessionCode = Session.generateSessionCode();
 
@@ -13,7 +19,8 @@ function socketHandlers(io: Server, socket: Socket) {
       userName,
       socket.id,
       sketchId,
-      sketchData
+      sketchData,
+      io
     );
     socket.join(sessionCode);
     socket.emit("session-created", sessionCode);
@@ -26,7 +33,7 @@ function socketHandlers(io: Server, socket: Socket) {
       userName,
       socket.id
     );
-    if (!joined) {
+    if (joined === 0 || joined === -1) {
       socket.emit("session-join-failed", "Session not found or full");
       return;
     }
@@ -45,6 +52,7 @@ function socketHandlers(io: Server, socket: Socket) {
     if (!session) return;
 
     const idx = session.sketchData.findIndex((s) => s.id === stroke.id);
+    let updatedStroke;
     if (idx === -1) {
       session.sketchData.push({
         id: stroke.id,
@@ -52,11 +60,17 @@ function socketHandlers(io: Server, socket: Socket) {
         strokeWidth: stroke.strokeWidth,
         points: [...stroke.points],
       });
+      updatedStroke = {
+        id: stroke.id,
+        stroke: stroke.stroke,
+        strokeWidth: stroke.strokeWidth,
+        points: [...stroke.points],
+      };
     } else {
       session.sketchData[idx].points.push(...stroke.points);
+      updatedStroke = session.sketchData[idx];
     }
-    // Emit the data in the format the frontend expects
-    socket.to(sessionCode).emit("draw", { stroke });
+    session.updatedStrokes.set(stroke.id, updatedStroke);
   });
 
   socket.on("clear", ({ sessionCode }) => {
