@@ -3,6 +3,7 @@ import { Stage, Layer, Line } from "react-konva";
 import { FaUndo, FaRedo, FaTrashAlt } from "react-icons/fa";
 import { IoIosColorPalette } from "react-icons/io";
 import { v4 as uuidv4 } from "uuid";
+import useAuth from "../contexts/useAuth";
 
 function Sketch({
   sketchData,
@@ -19,6 +20,7 @@ function Sketch({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColor, setCurrentColor] = useState("black");
   const [curLineId, setCurLineId] = useState(null);
+  const { user } = useAuth();
   const BASE_W = 800;
   const BASE_H = 400;
   const MIN_W = 400;
@@ -68,10 +70,8 @@ function Sketch({
       const sketchMap = new Map(sketchData.map((line) => [line.id, line]));
 
       const merged = [
-        // Keep lines that are not in sketchData (i.e. local only)
         ...prevLines.filter((line) => !sketchMap.has(line.id)),
 
-        // Add or replace lines from sketchData
         ...sketchData,
       ];
 
@@ -150,6 +150,7 @@ function Sketch({
             stroke: updatedLine.stroke,
             strokeWidth: updatedLine.strokeWidth,
             id: updatedLine.id,
+            userId: user.id,
           },
         });
       }
@@ -288,7 +289,7 @@ function Sketch({
               className="absolute bottom-full mb-10 left-1/2 -translate-x-1/2 bg-white border rounded shadow-lg p-2 z-50"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-4">
                 {colors.map((c, i) => (
                   <button
                     key={i}
