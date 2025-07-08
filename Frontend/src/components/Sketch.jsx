@@ -16,11 +16,13 @@ function Sketch({
   const [lines, setLines] = useState([]);
   const isDrawing = useRef(false);
   const stageRef = useRef(null);
+  const localLines = useRef(new Map());
   const [scale, setScale] = useState(1);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColor, setCurrentColor] = useState("black");
   const [curLineId, setCurLineId] = useState(null);
   const { user } = useAuth();
+
   const BASE_W = 800;
   const BASE_H = 400;
   const MIN_W = 400;
@@ -67,13 +69,11 @@ function Sketch({
     if (!Array.isArray(sketchData)) return;
     if (sketchData.length === 0) setLines([]);
     setLines((prevLines) => {
-      const sketchMap = new Map(sketchData.map((line) => [line.id, line]));
-
-      const merged = [
-        ...prevLines.filter((line) => !sketchMap.has(line.id)),
-
-        ...sketchData,
-      ];
+      const merged = sketchData.map((stroke) => {
+        const local = localLines.current.get(stroke.id);
+        if (!local) return stroke;
+        return local;
+      });
 
       return merged;
     });
@@ -117,6 +117,8 @@ function Sketch({
       strokeWidth: 4,
     };
 
+    localLines.current.set(id, newLine);
+
     const updatedLines = [...lines, newLine];
     setLines(updatedLines);
   }
@@ -141,6 +143,8 @@ function Sketch({
         updatedLine,
         ...prevLines.slice(idx + 1),
       ];
+
+      localLines.current.set(curLineId, updatedLine);
 
       if (socket && sessionCode) {
         socket.emit("draw", {
