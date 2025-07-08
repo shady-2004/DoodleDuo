@@ -4,7 +4,7 @@ import { Server, Socket } from "socket.io";
 
 function socketHandlers(io: Server, socket: Socket) {
   socket.on("disconnect", () => {
-    Session.leaveSession(socket.id);
+    Session.leaveSession(socket);
   });
 
   socket.on("create-session", ({ userId, userName, sketchId, sketchData }) => {
@@ -45,6 +45,7 @@ function socketHandlers(io: Server, socket: Socket) {
       sketchId: session?.sketchId,
       sketchData: session?.sketchData || [],
     });
+    socket.to(sessionCode).emit("player-joined", userName);
   });
 
   socket.on("draw", ({ sessionCode, stroke }) => {

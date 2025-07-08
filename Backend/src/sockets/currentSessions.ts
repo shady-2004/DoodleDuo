@@ -62,34 +62,37 @@ function joinSession(
   const session = sessions.get(sessionCode);
   if (!session) return 0;
 
-  console.log(session.users);
-
-  console.log(session.users.size, socketId);
   if (session.users.size === 2) return -1;
 
   session.users.set(socketId, { userId, userName });
   socketIdToSessionCode.set(socketId, sessionCode);
   return true;
 }
-function leaveSession(socketId: string): boolean {
-  const sessionCode = socketIdToSessionCode.get(socketId);
+function leaveSession(socket: any): boolean {
+  const sessionCode = socketIdToSessionCode.get(socket.id);
   if (!sessionCode) return false;
 
   const session = sessions.get(sessionCode);
   if (!session) {
-    socketIdToSessionCode.delete(socketId);
+    socketIdToSessionCode.delete(socket.id);
     return false;
   }
 
   // Remove socket ID from the session
-  session.users.delete(socketId);
-  socketIdToSessionCode.delete(socketId);
+  const user = session.users.get(socket.id);
 
+  const userName = user ? user.userName : undefined;
+  session.users.delete(socket.id);
+
+  socketIdToSessionCode.delete(socket.id);
   // If the owner left, delete the whole session
-  if (session.ownerSocketId === socketId) {
+  if (session.ownerSocketId === socket.id) {
     sessions.delete(sessionCode);
+    socket.to(sessionCode).emit("player-left", { userName, role: "owner" });
+
     return false;
   }
+  socket.to(sessionCode).emit("player-left", { userName, role: "user" });
 
   return true;
 }

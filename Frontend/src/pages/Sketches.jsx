@@ -53,7 +53,7 @@ function Sketches() {
   }, [logout, token]);
   return (
     <div
-      className={`min-h-lg bg-gray-50 flex items-center justify-center px-4 relative`}
+      className={`min-h-full  flex items-center justify-center px-4 relative`}
     >
       <div
         className={`flex flex-col items-center ${
