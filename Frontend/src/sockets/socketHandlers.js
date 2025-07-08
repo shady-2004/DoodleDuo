@@ -1,4 +1,6 @@
-const handlers = (socket, setSketchData, user) => {
+import { toast } from "react-toastify";
+
+const handlers = (socket, setSketchData, user, navigate) => {
   socket.on("draw", (data) => {
     setSketchData((prevSketchData) => {
       // const newStrokes = data.filter((stroke) => stroke.userId !== user.id);
@@ -21,6 +23,20 @@ const handlers = (socket, setSketchData, user) => {
 
   socket.on("clear", () => {
     setSketchData([]);
+  });
+  socket.on("player-joined", (name) => {
+    toast.dark(`${name} joined the session`, { autoClose: 2000 });
+  });
+  socket.on("player-left", ({ userName, role }) => {
+    console.log(role);
+    if (role !== "owner")
+      toast.dark(`${userName} left the session`, { autoClose: 2000 });
+    else {
+      toast.dark(`${userName} the owner of the sketch left`);
+      setTimeout(() => {
+        navigate("/sketches");
+      }, 2000);
+    }
   });
 };
 

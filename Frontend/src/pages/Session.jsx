@@ -66,7 +66,7 @@ function Session() {
         // Now it's safe to emit join-session
         s.emit("join-session", {
           userId: user.id,
-          userName: user.name,
+          userName: `${user.firstName} ${user.lastName}`,
           sessionCode: code,
         });
 
@@ -74,7 +74,7 @@ function Session() {
           setSketchData(data.sketchData || []);
           setIsLoading(false);
 
-          handlers(s, setSketchData, user);
+          handlers(s, setSketchData, user, navigate);
         });
 
         s.on("session-join-failed", (message) => {
@@ -126,7 +126,7 @@ function Session() {
 
       s.emit("create-session", {
         userId: user.id,
-        userName: user.name,
+        userName: `${user.firstName} ${user.lastName}`,
         sketchId: id,
         sketchData: sketchData,
       });
@@ -139,7 +139,7 @@ function Session() {
         });
         setSessionCode(data);
 
-        handlers(s, setSketchData, user);
+        handlers(s, setSketchData, user, navigate);
       });
     });
     s.on("connect_error", (err) => {
