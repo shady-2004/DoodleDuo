@@ -1,6 +1,16 @@
 import { v1 as uuidv4 } from "uuid";
 import { Server } from "socket.io";
 
+const avatarColors = [
+  "#F87171", // red-400
+  "#FBBF24", // yellow-400
+  "#34D399", // green-400
+  "#60A5FA", // blue-400
+  "#A78BFA", // purple-400
+  "#F472B6", // pink-400
+  "#FACC15", // amber-400
+];
+
 type SketchData = Stroke[];
 
 export type Stroke = {
@@ -16,11 +26,17 @@ type SessionData = {
   ownerName: string;
   ownerSocketId: string;
   sketchId: string;
-  users: Map<string, { userId: string; userName: string }>;
+  users: Map<string, { userId: string; userName: string; avatarColor: string }>;
   sketchData: SketchData;
   sessionInterval?: NodeJS.Timeout;
   updatedStrokes: Map<number, Stroke>;
 };
+
+function randomColor() {
+  const colorIdx = Math.floor(Math.random() * avatarColors.length);
+  console.log(colorIdx);
+  return avatarColors[colorIdx];
+}
 
 function createSession(
   sessionCode: string,
@@ -34,7 +50,9 @@ function createSession(
   sessions.set(sessionCode, {
     ownerId: userId,
     ownerName: userName,
-    users: new Map([[socketId, { userId, userName }]]),
+    users: new Map([
+      [socketId, { userId, userName, avatarColor: avatarColors[0] }],
+    ]),
     sketchId,
     sketchData,
     ownerSocketId: socketId,
@@ -51,9 +69,14 @@ function createSession(
     if (batch.length > 0) io.to(sessionCode).emit("draw", batch);
   }, 50);
   socketIdToSessionCode.set(socketId, sessionCode);
+  const session = sessions.get(sessionCode);
+  if (!session) return 0;
+  const users = Array.from(session.users.values());
+  io.to(sessionCode).emit("session-users", users);
 }
 
 function joinSession(
+  io: Server,
   sessionCode: string,
   userId: string,
   userName: string,
@@ -63,12 +86,22 @@ function joinSession(
   if (!session) return 0;
 
   if (session.users.size === 2) return -1;
+  const users = Array.from(session.users.values());
 
-  session.users.set(socketId, { userId, userName });
+  const user = users.find((user) => user.userId === userId);
+  if (user) return -2;
+
+  session.users.set(socketId, { userId, userName, avatarColor: randomColor() });
+  const newUser = session.users.get(socketId);
+  if (newUser) {
+    users.push(newUser);
+  }
   socketIdToSessionCode.set(socketId, sessionCode);
-  return true;
+
+  io.to(sessionCode).emit("session-users", users);
+  return 1;
 }
-function leaveSession(socket: any): boolean {
+function leaveSession(io: Server, socket: any): boolean {
   const sessionCode = socketIdToSessionCode.get(socket.id);
   if (!sessionCode) return false;
 
@@ -93,6 +126,8 @@ function leaveSession(socket: any): boolean {
     return false;
   }
   socket.to(sessionCode).emit("player-left", { userName, role: "user" });
+  const users = Array.from(session.users.values());
+  io.to(sessionCode).emit("session-users", users);
 
   return true;
 }

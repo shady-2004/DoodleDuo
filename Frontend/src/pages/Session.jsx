@@ -17,9 +17,9 @@ function Session() {
   const socket = useRef(null);
   const [sessionCode, setSessionCode] = useState(null);
   const { id, code } = useParams();
-
   const isGuest = code ? true : false;
   const { token, logout, user } = useAuth();
+  const [sessionMembers, setSessionMembers] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +54,12 @@ function Session() {
         }
       } finally {
         setIsLoading(false);
+        setSessionMembers([
+          {
+            userName: `${user.firstName} ${user.lastName}`,
+            userId: user.id,
+          },
+        ]);
       }
     }
     async function fetchGuestSketch() {
@@ -74,7 +80,7 @@ function Session() {
           setSketchData(data.sketchData || []);
           setIsLoading(false);
 
-          handlers(s, setSketchData, user, navigate);
+          handlers(s, setSketchData, user, navigate, setSessionMembers);
         });
 
         s.on("session-join-failed", (message) => {
@@ -106,7 +112,6 @@ function Session() {
     else fetchSketch();
 
     return () => {
-      console.log(socket);
       if (socket.current !== null) {
         console.log("bye bye");
 
@@ -139,11 +144,11 @@ function Session() {
         });
         setSessionCode(data);
 
-        handlers(s, setSketchData, user, navigate);
+        handlers(s, setSketchData, user, navigate, setSessionMembers);
       });
     });
     s.on("connect_error", (err) => {
-      console.error("❌ Session creation failed:", err);
+      setSessionCode(null);
       toast.error("Session creation failed", {
         position: "top-center",
         autoClose: 3000,
@@ -190,22 +195,52 @@ function Session() {
         </div>
       ) : (
         <div>
-          {!isGuest &&
-            (!sessionCode ? (
-              <div className="flex justify-center p-4 bg-white border-b shadow-sm">
+          <div className="bg-white border-b shadow-sm px-6 py-4 flex flex-row items-center justify-between flex-wrap gap-4">
+            {/* Avatars */}
+            <div className="flex flex-wrap gap-3">
+              {sessionMembers.map((member) => (
+                <div className="relative group">
+                  <div
+                    key={member.userId}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full 
+                     text-white font-semibold text-sm`}
+                    style={{
+                      backgroundColor: member.avatarColor || "#F87171",
+                    }}
+                  >
+                    {member.userName
+                      .split(" ")
+                      .map((name) => name[0])
+                      .join("")
+                      .toUpperCase()}
+                  </div>
+
+                  <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-black text-white rounded opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                    {member.userName}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Session Button or Code */}
+            {!isGuest &&
+              (!sessionCode ? (
                 <button
                   onClick={createSession}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md"
                 >
                   Create Session
                 </button>
-              </div>
-            ) : (
-              <h3 className="text-center text-gray-600 mt-4">
-                Session Code:{" "}
-                <span className="font-semibold">{sessionCode}</span>
-              </h3>
-            ))}
+              ) : (
+                <h3 className="text-gray-700 text-sm">
+                  <span className="text-gray-500">Session Code:</span>{" "}
+                  <span className="font-semibold text-blue-600">
+                    {sessionCode}
+                  </span>
+                </h3>
+              ))}
+          </div>
+
           <Sketch
             sketchData={sketchData}
             setSketchData={setSketchData}

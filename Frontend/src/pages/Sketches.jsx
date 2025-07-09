@@ -51,6 +51,7 @@ function Sketches() {
     }
     fetchSketches();
   }, [logout, token]);
+
   return (
     <div
       className={`min-h-full  flex items-center justify-center px-4 relative`}
