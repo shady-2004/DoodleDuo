@@ -45,7 +45,8 @@ function createSession(
   socketId: string,
   sketchId: string,
   sketchData: SketchData,
-  io: Server
+  io: Server,
+  socket: any
 ) {
   sessions.set(sessionCode, {
     ownerId: userId,
@@ -72,6 +73,7 @@ function createSession(
   const session = sessions.get(sessionCode);
   if (!session) return 0;
   const users = Array.from(session.users.values());
+  socket.join(sessionCode);
   io.to(sessionCode).emit("session-users", users);
 }
 
@@ -92,13 +94,9 @@ function joinSession(
   if (user) return -2;
 
   session.users.set(socketId, { userId, userName, avatarColor: randomColor() });
-  const newUser = session.users.get(socketId);
-  if (newUser) {
-    users.push(newUser);
-  }
+
   socketIdToSessionCode.set(socketId, sessionCode);
 
-  io.to(sessionCode).emit("session-users", users);
   return 1;
 }
 function leaveSession(io: Server, socket: any): boolean {
