@@ -4,7 +4,7 @@ import { Server, Socket } from "socket.io";
 
 function socketHandlers(io: Server, socket: Socket) {
   socket.on("disconnect", () => {
-    Session.leaveSession(socket);
+    Session.leaveSession(io, socket);
   });
 
   socket.on("create-session", ({ userId, userName, sketchId, sketchData }) => {
@@ -28,6 +28,7 @@ function socketHandlers(io: Server, socket: Socket) {
 
   socket.on("join-session", ({ sessionCode, userId, userName }) => {
     const joined = Session.joinSession(
+      io,
       sessionCode,
       userId,
       userName,
@@ -35,6 +36,10 @@ function socketHandlers(io: Server, socket: Socket) {
     );
     if (joined === 0 || joined === -1) {
       socket.emit("session-join-failed", "Session not found or full");
+      return;
+    }
+    if (joined === -2) {
+      socket.emit("session-join-failed", "User already joined the session");
       return;
     }
     const session = Session.sessions.get(sessionCode);

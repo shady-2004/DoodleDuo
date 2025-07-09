@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 
-const handlers = (socket, setSketchData, user, navigate) => {
+const handlers = (socket, setSketchData, user, navigate, setSessionMembers) => {
   socket.on("draw", (data) => {
     setSketchData((prevSketchData) => {
       // const newStrokes = data.filter((stroke) => stroke.userId !== user.id);
@@ -37,6 +37,10 @@ const handlers = (socket, setSketchData, user, navigate) => {
         navigate("/sketches");
       }, 2000);
     }
+  });
+  socket.on("session-users", (users) => {
+    console.log(users);
+    setSessionMembers(users);
   });
 };
 
