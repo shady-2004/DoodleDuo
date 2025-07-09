@@ -20,9 +20,10 @@ function socketHandlers(io: Server, socket: Socket) {
       socket.id,
       sketchId,
       sketchData,
-      io
+      io,
+      socket
     );
-    socket.join(sessionCode);
+
     socket.emit("session-created", sessionCode);
   });
 
@@ -43,13 +44,16 @@ function socketHandlers(io: Server, socket: Socket) {
       return;
     }
     const session = Session.sessions.get(sessionCode);
-
+    if (!session) return;
     socket.join(sessionCode);
     socket.emit("session-joined", {
       sessionCode,
       sketchId: session?.sketchId,
       sketchData: session?.sketchData || [],
     });
+    const users = Array.from(session.users.values());
+
+    io.to(sessionCode).emit("session-users", users);
     socket.to(sessionCode).emit("player-joined", userName);
   });
 
