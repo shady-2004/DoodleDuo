@@ -69,13 +69,19 @@ function Sketch({
     if (!Array.isArray(sketchData)) return;
     if (sketchData.length === 0) setLines([]);
     setLines((prevLines) => {
+      const existingIds = new Set(prevLines.map((l) => l.id));
       const merged = sketchData.map((stroke) => {
         const local = localLines.current.get(stroke.id);
         if (!local) return stroke;
+
         return local;
       });
 
-      return merged;
+      const newLocalLines = [...prevLines].filter(
+        (l) => !existingIds.has(l.id) && localLines.current.has(l.id)
+      );
+
+      return [...merged, ...newLocalLines];
     });
   }, [sketchData]);
 
@@ -119,8 +125,11 @@ function Sketch({
 
     localLines.current.set(id, newLine);
 
-    const updatedLines = [...lines, newLine];
-    setLines(updatedLines);
+    setLines((prevLines) => {
+      const alreadyExist = prevLines.some((line) => line.id === newLine.id);
+      if (alreadyExist) return prevLines;
+      return [...prevLines, newLine];
+    });
   }
 
   function handleMouseMove() {
@@ -165,7 +174,6 @@ function Sketch({
 
   function handleMouseUp() {
     isDrawing.current = false;
-    // Immediate save is optional; auto-save will handle this anyway
   }
 
   function undo() {
