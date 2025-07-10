@@ -139,6 +139,7 @@ function Sketch({
     const point = stage.getPointerPosition();
 
     setLines((prevLines) => {
+      const existingIds = new Set(prevLines.map((l) => l.id));
       const idx = prevLines.findIndex((line) => line.id === curLineId);
       if (idx === -1) return prevLines; // Line not found, no update
 
@@ -167,8 +168,11 @@ function Sketch({
           },
         });
       }
+      const newLocalLines = [...prevLines].filter(
+        (l) => !existingIds.has(l.id) && localLines.current.has(l.id)
+      );
 
-      return updatedLines;
+      return [...updatedLines, newLocalLines];
     });
   }
 
