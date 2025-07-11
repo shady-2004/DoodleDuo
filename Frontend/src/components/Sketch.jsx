@@ -25,7 +25,7 @@ function Sketch({
   const [curLineId, setCurLineId] = useState(null);
   const { user } = useAuth();
 
-  const BASE_W = 800;
+  const BASE_W = 1000;
   const BASE_H = 400;
   const MIN_W = 400;
   const MIN_H = 200;

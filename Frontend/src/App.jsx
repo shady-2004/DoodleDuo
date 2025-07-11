@@ -6,6 +6,7 @@ import AuthProvider from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Nav from "./components/Nav";
 import { ToastContainer } from "react-toastify";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -43,7 +44,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="*" element={<div>404 Not Found</div>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

@@ -12,5 +12,10 @@ export default defineConfig(({ mode }) => {
     define: {
       __API_URL__: JSON.stringify(env.VITE_API_URL || ""),
     },
+    server: {
+      hmr: {
+        overlay: false,
+      },
+    },
   };
 });
