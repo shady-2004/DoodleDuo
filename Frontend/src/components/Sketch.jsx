@@ -66,28 +66,29 @@ function Sketch({
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
-  // useEffect(() => {
-  //   if (!Array.isArray(remoteSketchData)) return;
-  //   if (remoteSketchData.length === 0) {
-  //     setSketchData([]);
-  //     setLines([]);
-  //   }
-  //   setLines((prevLines) => {
-  //     const existingIds = new Set(prevLines.map((l) => l.id));
-  //     const merged = sketchData.map((stroke) => {
-  //       const local = localLines.current.get(stroke.id);
-  //       if (!local) return stroke;
+  useEffect(() => {
+    if (!Array.isArray(remoteSketchData)) return;
+    if (remoteSketchData.length === 0) {
+      setSketchData([]);
+      setLines([]);
+      localLines.current.clear();
+    }
+    // setLines((prevLines) => {
+    //   const existingIds = new Set(prevLines.map((l) => l.id));
+    //   const merged = sketchData.map((stroke) => {
+    //     const local = localLines.current.get(stroke.id);
+    //     if (!local) return stroke;
 
-  //       return local;
-  //     });
+    //     return local;
+    //   });
 
-  //     const newLocalLines = [...prevLines].filter(
-  //       (l) => !existingIds.has(l.id) && localLines.current.has(l.id)
-  //     );
+    //   const newLocalLines = [...prevLines].filter(
+    //     (l) => !existingIds.has(l.id) && localLines.current.has(l.id)
+    //   );
 
-  //     return [...merged, ...newLocalLines];
-  //   });
-  // }, [remoteSketchData, lines]);
+    //   return [...merged, ...newLocalLines];
+    // });
+  }, [remoteSketchData]);
 
   async function hashLines(data) {
     const encoded = new TextEncoder().encode(JSON.stringify(data));
@@ -107,7 +108,7 @@ function Sketch({
       const currentHash = await hashLines(lines);
       if (currentHash !== lastHash) {
         lastHash = currentHash;
-        saveData(lines);
+        saveData(getSketchDataToRender());
       }
     }, 3000);
 
