@@ -13,8 +13,9 @@ import handlers from "../sockets/socketHandlers";
 
 function Session() {
   const [isLoading, setIsLoading] = useState(true);
-  const [sketchData, setSketchData] = useState([]);
   const [remoteSketchData, setRemoteSketchData] = useState([]);
+  const localLines = useRef(new Map());
+  const [lines, setLines] = useState([]);
 
   const socket = useRef(null);
   const [sessionCode, setSessionCode] = useState(null);
@@ -135,7 +136,7 @@ function Session() {
         userId: user.id,
         userName: `${user.firstName} ${user.lastName}`,
         sketchId: id,
-        sketchData: sketchData,
+        sketchData: getSketchDataToRender(),
       });
       s.on("session-created", (data) => {
         console.log("Session created:", data);
@@ -189,6 +190,19 @@ function Session() {
     }
   }
 
+  function getSketchDataToRender() {
+    const data = remoteSketchData.map((line) => {
+      return localLines.current.get(line.id) || line;
+    });
+    const ids = new Set(data.map((l) => l.id));
+    localLines.current.forEach((val, key) => {
+      if (!ids.has(key)) {
+        data.push(val);
+      }
+    });
+    return data;
+  }
+
   return (
     <>
       {isLoading ? (
@@ -200,8 +214,8 @@ function Session() {
           <div className="bg-white border-b shadow-sm px-6 py-4 flex flex-row items-center justify-between flex-wrap gap-4">
             {/* Avatars */}
             <div className="flex flex-wrap gap-3">
-              {sessionMembers.map((member) => (
-                <div className="relative group">
+              {sessionMembers.map((member, i) => (
+                <div className="relative group" key={i}>
                   <div
                     key={member.userId}
                     className={`w-10 h-10 flex items-center justify-center rounded-full 
@@ -244,9 +258,12 @@ function Session() {
           </div>
 
           <Sketch
+            getSketchDataToRender={getSketchDataToRender}
+            localLines={localLines}
+            lines={lines}
+            setLines={setLines}
             remoteSketchData={remoteSketchData}
-            sketchData={sketchData}
-            setSketchData={setSketchData}
+            setRemoteSketchData={setRemoteSketchData}
             saveData={saveData}
             isGuest={isGuest}
             sessionCode={isGuest ? code : sessionCode}

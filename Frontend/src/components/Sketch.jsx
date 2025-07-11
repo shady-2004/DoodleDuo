@@ -6,18 +6,19 @@ import { v4 as uuidv4 } from "uuid";
 import useAuth from "../contexts/useAuth";
 
 function Sketch({
+  localLines,
+  lines,
+  setLines,
   remoteSketchData,
-  sketchData,
-  setSketchData,
+  setRemoteSketchData,
   saveData,
   isGuest,
   sessionCode,
   socket,
 }) {
-  const [lines, setLines] = useState([]);
   const isDrawing = useRef(false);
   const stageRef = useRef(null);
-  const localLines = useRef(new Map());
+
   const [scale, setScale] = useState(1);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColor, setCurrentColor] = useState("black");
@@ -69,7 +70,6 @@ function Sketch({
   useEffect(() => {
     if (!Array.isArray(remoteSketchData)) return;
     if (remoteSketchData.length === 0) {
-      setSketchData([]);
       setLines([]);
       localLines.current.clear();
     }
@@ -186,9 +186,12 @@ function Sketch({
   }
 
   function undo() {
+    if (!lines.length) return;
+    const last = lines[lines.length - 1];
+    console.log(last);
+    localLines.current.delete(last.id);
     const updated = lines.slice(0, -1);
     setLines(updated);
-    if (!isGuest) saveData(updated);
 
     // Emit to socket for real-time sync
     if (socket && sessionCode) {
@@ -198,7 +201,8 @@ function Sketch({
 
   function clearCanvas() {
     setLines([]);
-    setSketchData([]);
+    localLines.current.clear();
+    setRemoteSketchData([]);
     if (!isGuest) saveData([]);
 
     // Emit to socket for real-time sync
@@ -268,31 +272,37 @@ function Sketch({
       </div>
 
       <div className="flex space-x-4 relative z-20">
-        <div className="relative group">
-          <button
-            onClick={undo}
-            className="p-2 hover:scale-110 transition cursor-pointer"
-            disabled={getSketchDataToRender().length === 0}
-          >
-            <FaUndo size={20} />
-          </button>
-          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-black text-white rounded opacity-0 group-hover:opacity-100 transition pointer-events-none">
-            Undo
-          </span>
-        </div>
+        {/* {socket === null ? (
+          <>
+            <div className="relative group">
+              <button
+                onClick={undo}
+                className="p-2 hover:scale-110 transition cursor-pointer"
+                disabled={getSketchDataToRender().length === 0}
+              >
+                <FaUndo size={20} />
+              </button>
+              <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-black text-white rounded opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                Undo
+              </span>
+            </div>
 
-        <div className="relative group">
-          <button
-            onClick={() => {}}
-            className="p-2 hover:scale-110 transition cursor-pointer opacity-50"
-            disabled
-          >
-            <FaRedo size={20} />
-          </button>
-          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-black text-white rounded opacity-0 group-hover:opacity-100 transition pointer-events-none">
-            Redo
-          </span>
-        </div>
+            <div className="relative group">
+              <button
+                onClick={() => {}}
+                className="p-2 hover:scale-110 transition cursor-pointer opacity-50"
+                disabled
+              >
+                <FaRedo size={20} />
+              </button>
+              <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-black text-white rounded opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                Redo
+              </span>
+            </div>
+          </>
+        ) : (
+          ""
+        )} */}
 
         <div className="relative group">
           <button
