@@ -161,11 +161,12 @@ function Session() {
     });
   }
 
-  async function saveData(sketch) {
+  async function saveData(sketch, picture) {
+    console.log(picture);
     try {
       await axios.patch(
         apiUrl + `/users/sketch/${id}`,
-        { sketchData: JSON.stringify(sketch) },
+        { sketchData: JSON.stringify(sketch), picture },
         {
           headers: {
             Authorization: `Bearer ${token}`,
