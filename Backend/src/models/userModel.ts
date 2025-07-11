@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
     type: [sketchSchema], // use the imported sketchSchema for subdocuments
     validate: {
       validator: function (val: [mongoose.Schema.Types.Mixed]) {
-        return val.length <= 6; // max 6 elements
+        return val.length <= 8; // max 8 elements
       },
       message: "You can only store up to 6 sketches",
     },

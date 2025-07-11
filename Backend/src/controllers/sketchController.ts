@@ -132,6 +132,9 @@ const updateUserSketch = catchAsync(
       return next(new AppError("Missing sketch data sketch data ", 403));
     }
     user.sketches[sketchIndex].data = req.body.sketchData;
+    if (req.body.picture) {
+      user.sketches[sketchIndex].picture = req.body.picture;
+    }
     // user.sketches[sketchIndex].picture = req.body.sketchPicture;
     await user.save();
     res.status(204).json({
