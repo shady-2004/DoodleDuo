@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import useAuth from "../contexts/useAuth";
 
 function Sketch({
+  remoteSketchData,
   sketchData,
   setSketchData,
   saveData,
@@ -65,25 +66,28 @@ function Sketch({
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
-  useEffect(() => {
-    if (!Array.isArray(sketchData)) return;
-    if (sketchData.length === 0) setLines([]);
-    setLines((prevLines) => {
-      const existingIds = new Set(prevLines.map((l) => l.id));
-      const merged = sketchData.map((stroke) => {
-        const local = localLines.current.get(stroke.id);
-        if (!local) return stroke;
+  // useEffect(() => {
+  //   if (!Array.isArray(remoteSketchData)) return;
+  //   if (remoteSketchData.length === 0) {
+  //     setSketchData([]);
+  //     setLines([]);
+  //   }
+  //   setLines((prevLines) => {
+  //     const existingIds = new Set(prevLines.map((l) => l.id));
+  //     const merged = sketchData.map((stroke) => {
+  //       const local = localLines.current.get(stroke.id);
+  //       if (!local) return stroke;
 
-        return local;
-      });
+  //       return local;
+  //     });
 
-      const newLocalLines = [...prevLines].filter(
-        (l) => !existingIds.has(l.id) && localLines.current.has(l.id)
-      );
+  //     const newLocalLines = [...prevLines].filter(
+  //       (l) => !existingIds.has(l.id) && localLines.current.has(l.id)
+  //     );
 
-      return [...merged, ...newLocalLines];
-    });
-  }, [sketchData]);
+  //     return [...merged, ...newLocalLines];
+  //   });
+  // }, [remoteSketchData, lines]);
 
   async function hashLines(data) {
     const encoded = new TextEncoder().encode(JSON.stringify(data));
@@ -202,6 +206,19 @@ function Sketch({
     }
   }
 
+  function getSketchDataToRender() {
+    const data = remoteSketchData.map((line) => {
+      return localLines.current.get(line.id) || line;
+    });
+    const ids = new Set(data.map((l) => l.id));
+    localLines.current.forEach((val, key) => {
+      if (!ids.has(key)) {
+        data.push(val);
+      }
+    });
+    return data;
+  }
+
   return (
     <div
       className="flex flex-col items-center p-6 bg-gray-100 min-h-screen"
@@ -234,7 +251,7 @@ function Sketch({
           }}
         >
           <Layer>
-            {lines.map((line, i) => (
+            {getSketchDataToRender().map((line, i) => (
               <Line
                 key={i}
                 points={line.points}
@@ -254,7 +271,7 @@ function Sketch({
           <button
             onClick={undo}
             className="p-2 hover:scale-110 transition cursor-pointer"
-            disabled={lines.length === 0}
+            disabled={getSketchDataToRender().length === 0}
           >
             <FaUndo size={20} />
           </button>
@@ -280,7 +297,7 @@ function Sketch({
           <button
             onClick={clearCanvas}
             className="p-2 hover:scale-110 transition cursor-pointer"
-            disabled={lines.length === 0}
+            disabled={getSketchDataToRender().length === 0}
           >
             <FaTrashAlt size={20} />
           </button>
