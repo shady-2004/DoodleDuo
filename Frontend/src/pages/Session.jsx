@@ -162,7 +162,6 @@ function Session() {
   }
 
   async function saveData(sketch, picture) {
-    console.log(picture);
     try {
       await axios.patch(
         apiUrl + `/users/sketch/${id}`,
