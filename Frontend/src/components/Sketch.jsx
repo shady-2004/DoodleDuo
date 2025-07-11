@@ -103,12 +103,13 @@ function Sketch({
     let lastHash = "";
 
     const interval = setInterval(async () => {
-      if (lines.length === 0) return; // skip empty
+      if (getSketchDataToRender().length === 0) return; // skip empty
 
-      const currentHash = await hashLines(lines);
+      const currentHash = await hashLines(getSketchDataToRender());
       if (currentHash !== lastHash) {
         lastHash = currentHash;
-        saveData(getSketchDataToRender());
+        console.log("shady");
+        saveData(getSketchDataToRender(), generateThumbnail());
       }
     }, 3000);
 
@@ -235,6 +236,18 @@ function Sketch({
       }
     });
     return data;
+  }
+
+  function generateThumbnail() {
+    const originalWidth = stageRef.current.width();
+    const originalHeight = stageRef.current.height();
+    const thumbnailSize = 150;
+
+    const dataURL = stageRef.current.toDataURL({
+      pixelRatio: thumbnailSize / Math.max(originalWidth, originalHeight), // scale down proportionally
+    });
+
+    return dataURL;
   }
 
   return (
