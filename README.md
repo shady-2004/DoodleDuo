@@ -66,7 +66,7 @@
   Two users drawing together in real-time with seamless Socket.IO sync.  
   <img src="https://github.com/user-attachments/assets/3f99d036-5aef-4585-bb37-3f21ddd755f5" alt="Collaborative Session" width="600">
 
-- **Create Session **  
+- **Create Session**  
   Generate a unique session code to share for collaborative sketching.  
   <img src="https://github.com/user-attachments/assets/d6ff568e-f6ee-4229-a338-82c24d69d758" alt="Create Session" width="600">
 
