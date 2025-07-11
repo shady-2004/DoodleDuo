@@ -128,6 +128,19 @@ function Sketch({
       strokeWidth: 4,
     };
 
+    if (socket && sessionCode) {
+      socket.emit("draw", {
+        sessionCode,
+        stroke: {
+          points: [point.x, point.y],
+          stroke: newLine.stroke,
+          strokeWidth: newLine.strokeWidth,
+          id: newLine.id,
+          userId: user.id,
+        },
+      });
+    }
+
     localLines.current.set(id, newLine);
 
     setLines((prevLines) => {
