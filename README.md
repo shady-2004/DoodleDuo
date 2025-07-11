@@ -1,4 +1,5 @@
-<img width="1911" height="877" alt="image" src="https://github.com/user-attachments/assets/2fde5439-19d0-40ec-a475-c031aa427c80" /># 🖌️ DoodleDuo
+<img width="888" height="736" alt="image" src="https://github.com/user-attachments/assets/92d58b75-def4-4ffa-b833-1219c8957622" /><img width="1900" height="918" alt="image" src="https://github.com/user-attachments/assets/269297c7-85dd-4496-a207-05f4b5140e47" />
+# 🖌️ DoodleDuo
 
 **DoodleDuo** is a real-time collaborative sketching web app. Draw solo or start a live session and invite a friend using a unique code to sketch together instantly.
 
@@ -6,13 +7,14 @@
 
 ## 🌐 Live Demo
 
-🔗 [Launch DoodleDuo](https://your-deployment-link.com)
+🔗 [Launch DoodleDuo](doodle-duo.vercel.app)
 
 ---
 
 ## 🖼️ Preview
 
-<img src="preview.png" alt="DoodleDuo Screenshot" width="800"/>
+<img width="1918" height="903" alt="image" src="https://github.com/user-attachments/assets/36cbedeb-4119-4f1a-9580-9a1b678ce3b5" />
+
 
 > *Above: Solo sketch mode with drawing tools and session buttons*
 
@@ -53,6 +55,7 @@
 1. Click **"Join Session"**.
 2. Enter the shared session code.
 3. Start drawing together in real-time!
+<img width="888" height="736" alt="image" src="https://github.com/user-attachments/assets/d71c663a-2443-47dd-8236-6ac3263cf77b" />
 
 ---
 
