@@ -14,6 +14,8 @@ import handlers from "../sockets/socketHandlers";
 function Session() {
   const [isLoading, setIsLoading] = useState(true);
   const [sketchData, setSketchData] = useState([]);
+  const [remoteSketchData, setRemoteSketchData] = useState([]);
+
   const socket = useRef(null);
   const [sessionCode, setSessionCode] = useState(null);
   const { id, code } = useParams();
@@ -32,7 +34,7 @@ function Session() {
           },
         });
         if (response.data.data.sketch.data) {
-          setSketchData(JSON.parse(response.data.data.sketch.data));
+          setRemoteSketchData(JSON.parse(response.data.data.sketch.data));
         }
       } catch (err) {
         if (err?.response?.status === 401) {
@@ -77,10 +79,10 @@ function Session() {
         });
 
         s.on("session-joined", (data) => {
-          setSketchData(data.sketchData || []);
+          setRemoteSketchData(data.sketchData || []);
           setIsLoading(false);
 
-          handlers(s, setSketchData, user, navigate, setSessionMembers);
+          handlers(s, setRemoteSketchData, user, navigate, setSessionMembers);
         });
 
         s.on("session-join-failed", (message) => {
@@ -144,7 +146,7 @@ function Session() {
         });
         setSessionCode(data);
 
-        handlers(s, setSketchData, user, navigate, setSessionMembers);
+        handlers(s, setRemoteSketchData, user, navigate, setSessionMembers);
       });
     });
     s.on("connect_error", (err) => {
@@ -242,6 +244,7 @@ function Session() {
           </div>
 
           <Sketch
+            remoteSketchData={remoteSketchData}
             sketchData={sketchData}
             setSketchData={setSketchData}
             saveData={saveData}
