@@ -6,7 +6,7 @@ async function connect() {
       throw new Error("Missing DATABASE or DATABASE_PASSWORD in .env");
     }
 
-    const uri = process.env.DATABASE;
+    let uri = process.env.DATABASE;
 
     const clientOptions = {
       serverApi: {
