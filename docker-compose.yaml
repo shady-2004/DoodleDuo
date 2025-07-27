@@ -1,0 +1,48 @@
+services:
+  mongodb:
+    image: mongo
+    volumes:
+      - data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE=mongodb://user:password@mongodb:27017/?authSource=admin
+      - DATABASE_USER=shady
+      - DATABASE_PASSWORD=testPassword
+      - JWT_SECRET=2894732894Secretesa;kfjslf
+      - JWT_EXPIRES_IN=30d
+    volumes:
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000/DoodleDuo/api
+      - VITE_SOCKET_URL=http://localhost:3000
+    command: npm run dev
+    volumes:
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+
+volumes:
+  data:

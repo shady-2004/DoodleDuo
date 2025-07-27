@@ -2,13 +2,13 @@ FROM node:20.15.1
 
 WORKDIR /app
 
-COPY package.json /app
+COPY package*.json /app
 
-RUN npm install
+RUN npm ci --legacy-peer-deps
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 5173
 
 
-CMD ["npm","start"]
+CMD ["npm","run","dev"]
